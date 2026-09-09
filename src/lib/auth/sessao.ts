@@ -38,12 +38,13 @@ export async function obterSessao(): Promise<SessaoUsuario | null> {
   const usuarioAuth = await obterUsuarioAutenticado();
   if (!usuarioAuth) return null;
 
-  const { data: usuario } = await supabase
+  const { data: usuario, error } = await supabase
     .from("usuarios")
     .select("papel, assessor_id, ativo, assessores(nome)")
     .eq("id", usuarioAuth.id)
     .maybeSingle();
 
+  if (error) console.error("Falha ao consultar usuarios em obterSessao:", error.message);
   if (!usuario || !usuario.ativo) return null;
 
   const assessor = Array.isArray(usuario.assessores) ? usuario.assessores[0] : usuario.assessores;
