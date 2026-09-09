@@ -123,6 +123,18 @@ export async function atualizarUsuarioAction(
   }
 }
 
+export async function atualizarCarteiraAction(usuarioId: string, assessorIds: string[]): Promise<Resultado> {
+  try {
+    await repo.atualizarCarteiraCoordenador(usuarioId, assessorIds);
+    revalidatePath("/ajustes");
+    revalidatePath("/equipe");
+    revalidatePath("/lancar");
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}
+
 export async function exportarDadosJSONAction(): Promise<
   { ok: true; json: string } | { ok: false; erro: string }
 > {

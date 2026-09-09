@@ -808,12 +808,54 @@ interface UsuarioRowDB {
 
 export async function listarUsuarios(): Promise<UsuarioRow[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("usuarios").select("*").order("email");
-  lancarSeErro(error);
-  return ((data ?? []) as UsuarioRowDB[])
-    .map((u) => ({ id: u.id, email: u.email, papel: u.papel, assessorId: u.assessor_id, ativo: u.ativo }))
+  const [usuariosResp, carteiraResp] = await Promise.all([
+    supabase.from("usuarios").select("*").order("email"),
+    supabase.from("coordenacoes_assessores").select("usuario_id, assessor_id"),
+  ]);
+  lancarSeErro(usuariosResp.error);
+  lancarSeErro(carteiraResp.error);
+
+  const carteiras = (carteiraResp.data ?? []) as { usuario_id: string; assessor_id: string }[];
+
+  return ((usuariosResp.data ?? []) as UsuarioRowDB[])
+    .map((u) => ({
+      id: u.id,
+      email: u.email,
+      papel: u.papel,
+      assessorId: u.assessor_id,
+      ativo: u.ativo,
+      carteira: carteiras.filter((c) => c.usuario_id === u.id).map((c) => c.assessor_id),
+    }))
     // pendentes de aprovação primeiro — é o que a diretoria precisa ver de cara
     .sort((a, b) => Number(a.ativo) - Number(b.ativo) || a.email.localeCompare(b.email));
+}
+
+/** Substitui a carteira de assessores de um coordenador (§7: cada coordenador só vê/edita a própria carteira). */
+export async function atualizarCarteiraCoordenador(
+  usuarioId: string,
+  assessorIds: string[]
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error: e1 } = await supabase
+    .from("coordenacoes_assessores")
+    .delete()
+    .eq("usuario_id", usuarioId);
+  lancarSeErro(e1);
+
+  if (assessorIds.length > 0) {
+    const { error: e2 } = await supabase
+      .from("coordenacoes_assessores")
+      .insert(assessorIds.map((assessorId) => ({ usuario_id: usuarioId, assessor_id: assessorId })));
+    lancarSeErro(e2);
+  }
+
+  await registrarLog(supabase, {
+    acao: "atualizar_carteira_coordenador",
+    entidade: "usuario",
+    entidadeId: usuarioId,
+    valorNovo: { assessorIds },
+  });
 }
 
 export async function atualizarUsuario(

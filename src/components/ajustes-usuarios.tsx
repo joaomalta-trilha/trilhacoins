@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { atualizarUsuarioAction } from "@/app/actions";
+import { atualizarCarteiraAction, atualizarUsuarioAction } from "@/app/actions";
 import type { Papel } from "@/lib/auth/sessao";
 
 interface UsuarioEditavel {
@@ -10,6 +10,7 @@ interface UsuarioEditavel {
   papel: Papel;
   assessorId: string | null;
   ativo: boolean;
+  carteira: string[];
 }
 
 const PAPEIS: { valor: Papel; rotulo: string }[] = [
@@ -43,7 +44,7 @@ export function AjustesUsuarios({
               <tr>
                 <th>E-mail</th>
                 <th>Papel</th>
-                <th>Assessor vinculado</th>
+                <th>Assessor(es) vinculado(s)</th>
                 <th>Ativo</th>
               </tr>
             </thead>
@@ -68,6 +69,7 @@ function LinhaUsuario({
 }) {
   const [papel, setPapel] = useState<Papel>(usuario.papel);
   const [assessorId, setAssessorId] = useState(usuario.assessorId ?? "");
+  const [carteira, setCarteira] = useState<string[]>(usuario.carteira);
   const [ativo, setAtivo] = useState(usuario.ativo);
   const [pending, startTransition] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -78,6 +80,19 @@ function LinhaUsuario({
     setSalvo(false);
     startTransition(async () => {
       const r = await atualizarUsuarioAction(usuario.id, patch);
+      if (!r.ok) setErro(r.erro);
+      else {
+        setSalvo(true);
+        setTimeout(() => setSalvo(false), 1500);
+      }
+    });
+  }
+
+  function salvarCarteira(novaCarteira: string[]) {
+    setErro(null);
+    setSalvo(false);
+    startTransition(async () => {
+      const r = await atualizarCarteiraAction(usuario.id, novaCarteira);
       if (!r.ok) setErro(r.erro);
       else {
         setSalvo(true);
@@ -112,22 +127,51 @@ function LinhaUsuario({
         </select>
       </td>
       <td>
-        <select
-          className="input"
-          value={assessorId}
-          disabled={pending}
-          onChange={(e) => {
-            setAssessorId(e.target.value);
-            salvar({ assessorId: e.target.value === "" ? null : e.target.value });
-          }}
-        >
-          <option value="">— nenhum —</option>
-          {assessores.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nome}
-            </option>
-          ))}
-        </select>
+        {papel === "assessor" && (
+          <select
+            className="input"
+            value={assessorId}
+            disabled={pending}
+            onChange={(e) => {
+              setAssessorId(e.target.value);
+              salvar({ assessorId: e.target.value === "" ? null : e.target.value });
+            }}
+          >
+            <option value="">— nenhum —</option>
+            {assessores.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nome}
+              </option>
+            ))}
+          </select>
+        )}
+        {papel === "coordenacao" && (
+          <div>
+            <select
+              className="input"
+              multiple
+              size={Math.min(4, assessores.length || 1)}
+              value={carteira}
+              disabled={pending}
+              onChange={(e) => {
+                const selecionados = [...e.target.selectedOptions].map((o) => o.value);
+                setCarteira(selecionados);
+                salvarCarteira(selecionados);
+              }}
+              style={{ minWidth: 180 }}
+            >
+              {assessores.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nome}
+                </option>
+              ))}
+            </select>
+            <div style={{ fontSize: 11, color: "var(--texto-suave)", marginTop: 2 }}>
+              Ctrl/Cmd+clique para selecionar vários
+            </div>
+          </div>
+        )}
+        {papel === "diretoria" && <span style={{ color: "var(--texto-suave)" }}>— vê todo mundo —</span>}
       </td>
       <td>
         <input

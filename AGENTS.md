@@ -62,6 +62,15 @@ correspondente se for o caso, marca ativo — na seção "Usuários" de
 Ajustes (`src/components/ajustes-usuarios.tsx`). Continua valendo o
 "quem loga sem cadastro aprovado não entra em nada" do §4.
 
+**Carteira de coordenação** (não é uma das etapas do §11, extensão do
+§7 pedida depois): diferente do desenho original, coordenação não vê
+mais o time inteiro por padrão — cada coordenador é vinculado a um
+subconjunto de assessores (tabela `coordenacoes_assessores`,
+`supabase/migrations/0006_carteira_coordenacao.sql`), e o RLS filtra
+por essa carteira via `pode_acessar_assessor(id)`. Diretoria continua
+sem restrição. Editável em Ajustes → Usuários (multi-seleção quando
+papel é coordenação).
+
 O motor de cálculo (`src/lib/trilhacoins/`) é puro e cobre por teste
 todas as fórmulas do §6 do briefing — trate esse contrato como
 autoritativo antes de alterar qualquer fórmula. `metas`/`niveis` são

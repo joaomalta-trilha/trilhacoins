@@ -57,6 +57,8 @@ export interface UsuarioRow {
   papel: Papel;
   assessorId: string | null;
   ativo: boolean;
+  /** só relevante quando papel === "coordenacao" — assessores que essa pessoa gerencia */
+  carteira: string[];
 }
 
 export interface LogRow {
