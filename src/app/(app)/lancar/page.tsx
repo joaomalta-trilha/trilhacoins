@@ -1,5 +1,5 @@
 import { GradeLancamento } from "@/components/grade-lancamento";
-import { obterSessao } from "@/lib/auth/sessao";
+import { exigirGestao } from "@/lib/auth/sessao";
 import {
   listarAssessoresAtivos,
   listarMesesRecentes,
@@ -14,10 +14,10 @@ export default async function LancarPage({
 }: {
   searchParams: Promise<{ mes?: string }>;
 }) {
-  const { mes: mesParam } = await searchParams;
+  const [sessao, { mes: mesParam }] = await Promise.all([exigirGestao(), searchParams]);
   const mes = mesParam ?? mesReferenciaPadrao();
 
-  const [sessao, assessores] = await Promise.all([obterSessao(), listarAssessoresAtivos()]);
+  const assessores = await listarAssessoresAtivos();
   const [status, ...lancamentosPorAssessor] = await Promise.all([
     statusDoMes(mes),
     ...assessores.map((a) => obterLancamentosDoMes(a.id, mes)),

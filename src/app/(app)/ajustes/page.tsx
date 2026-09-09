@@ -1,4 +1,5 @@
 import { listarAssessores, listarLog, listarPromocoes, listarUsuarios } from "@/lib/data/repo";
+import { exigirDiretoria } from "@/lib/auth/sessao";
 import { AjustesAssessores } from "@/components/ajustes-assessores";
 import { AjustesLog } from "@/components/ajustes-log";
 import { AjustesUsuarios } from "@/components/ajustes-usuarios";
@@ -6,6 +7,7 @@ import { ExportarJSON } from "@/components/exportar-json";
 import { Card, fmt, rotuloMes } from "@/components/ui";
 
 export default async function AjustesPage() {
+  await exigirDiretoria();
   const [assessores, promocoes, usuarios, log] = await Promise.all([
     listarAssessores(),
     listarPromocoes(),

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 export type Papel = "diretoria" | "coordenacao" | "assessor";
@@ -61,4 +62,27 @@ export async function obterSessao(): Promise<SessaoUsuario | null> {
     assessorId: usuario.assessor_id,
     nome: assessor?.nome ?? usuarioAuth.email,
   };
+}
+
+/**
+ * Trava de página para telas de gestão (Equipe, Lançar mês, Ajustes):
+ * o menu já esconde esses links pra quem tem papel "assessor", mas o
+ * menu é só UI — isso aqui é a barreira de verdade, pro caso de a
+ * pessoa cair na URL por qualquer outro caminho (§7: assessor nunca
+ * vê saldo/progressão dos colegas).
+ */
+export async function exigirGestao(): Promise<SessaoUsuario> {
+  const sessao = await obterSessao();
+  // Na prática o layout de (app) já barra isso antes de renderizar a
+  // página — este `redirect("/")` é só o fallback defensivo.
+  if (!sessao) redirect("/");
+  if (sessao.papel === "assessor") redirect("/assessor");
+  return sessao;
+}
+
+/** Igual a `exigirGestao`, mas só diretoria — Ajustes é exclusivo dela (§7). */
+export async function exigirDiretoria(): Promise<SessaoUsuario> {
+  const sessao = await exigirGestao();
+  if (sessao.papel !== "diretoria") redirect("/equipe");
+  return sessao;
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BASE_MENSAL, ehCheckpoint, mesAtualChave } from "@/lib/trilhacoins";
+import { exigirGestao } from "@/lib/auth/sessao";
 import {
   listarMesesRecentes,
   listarPaineisEquipe,
@@ -16,6 +17,7 @@ export default async function EquipePage({
 }: {
   searchParams: Promise<{ mes?: string }>;
 }) {
+  await exigirGestao();
   const { mes: mesParam } = await searchParams;
   const mes = mesParam ?? mesReferenciaPadrao();
 
