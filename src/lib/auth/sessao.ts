@@ -38,9 +38,14 @@ export async function obterSessao(): Promise<SessaoUsuario | null> {
   const usuarioAuth = await obterUsuarioAutenticado();
   if (!usuarioAuth) return null;
 
+  // "assessores!assessor_id" desambigua o embed: desde que
+  // `coordenacoes_assessores` existe, há dois caminhos possíveis entre
+  // `usuarios` e `assessores` (o vínculo direto de assessor e a
+  // carteira de coordenação via a tabela nova) — sem isso o PostgREST
+  // recusa a consulta por ambiguidade.
   const { data: usuario, error } = await supabase
     .from("usuarios")
-    .select("papel, assessor_id, ativo, assessores(nome)")
+    .select("papel, assessor_id, ativo, assessores!assessor_id(nome)")
     .eq("id", usuarioAuth.id)
     .maybeSingle();
 
