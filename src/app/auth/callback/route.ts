@@ -15,6 +15,9 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(`${origin}${proximo}`);
     }
+    console.error("Falha ao trocar code por sessão:", error.message);
+  } else {
+    console.error("Callback de auth chamado sem `code` na URL.");
   }
 
   return NextResponse.redirect(`${origin}/login?erro=auth`);
