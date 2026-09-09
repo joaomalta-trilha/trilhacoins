@@ -1,0 +1,42 @@
+// Símbolo Trilha inline (skill trilha-brand) — path original de
+// public/brand/svg/trilha-simbolo.svg, recolorável via `currentColor`.
+export function SimboloTrilha({ size = 28, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 858 858"
+      fill="currentColor"
+      fillRule="evenodd"
+      role="img"
+      aria-label="Símbolo Trilha"
+      className={className}
+    >
+      <path d="M310.0,858.0L252.0,858.0L252.0,697.7L252.0,537.4L250.8,536.2L249.6,535.0L247.8,535.0L246.0,535.0L163.8,612.0L81.7,689.0L80.8,689.0L80.0,689.0L41.2,652.8L2.5,616.6L2.5,615.9L2.5,615.2L129.5,496.6L256.5,378.0L257.7,376.2L259.0,374.4L257.4,372.2L255.9,370.0L127.9,370.0L0.0,370.0L0.0,312.0L0.0,254.0L160.4,254.0L320.8,254.0L322.0,252.6L323.2,251.1L322.8,249.1L322.5,247.2L243.6,163.0L164.7,78.8L169.6,74.0L174.5,69.2L208.9,37.1L243.4,4.9L245.1,6.7L246.8,8.5L364.0,134.0L481.1,259.5L484.3,259.5L487.5,259.5L488.1,230.5L488.7,201.5L488.9,100.8L489.0,0.0L546.5,0.0L604.0,0.0L604.0,160.4L604.0,320.9L606.2,322.4L608.4,324.0L609.2,324.0L610.0,324.0L689.7,249.4L769.5,174.7L772.5,171.9L775.5,169.1L814.5,205.4L853.5,241.8L853.5,242.8L853.5,243.9L726.0,362.9L598.5,481.9L598.2,484.2L597.8,486.4L599.6,487.7L601.4,489.0L729.7,489.0L858.0,489.0L858.0,546.5L858.0,604.0L698.2,604.0L538.5,604.0L536.0,605.3L533.5,606.6L533.2,608.6L532.9,610.6L612.0,694.9L691.0,779.2L691.0,780.0L691.0,780.9L652.3,816.9L613.6,853.0L612.9,853.0L612.1,853.0L493.6,726.1L375.1,599.2L373.5,598.6L371.8,598.0L371.5,598.0L371.1,598.0L369.6,599.6L368.0,601.1L368.0,729.6L368.0,858.0L310.0,858.0Z" />
+    </svg>
+  );
+}
+
+export function LogoTrilhaCoins() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <SimboloTrilha size={30} className="text-[var(--acento)]" />
+      <div>
+        <div
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color: "var(--texto-forte)",
+            letterSpacing: "-0.02em",
+            lineHeight: 1.1,
+          }}
+        >
+          TrilhaCoins
+        </div>
+        <div className="rotulo" style={{ marginTop: 2 }}>
+          trilha performance digital
+        </div>
+      </div>
+    </div>
+  );
+}
