@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Protótipo de referência (só leitura) — não é código mantido aqui.
     "reference/**",
+    // Pastas fora do iCloud (ver .gitignore) e material interno.
+    "node_modules.nosync/**",
+    ".next.nosync/**",
+    "data/**",
   ]),
 ]);
 

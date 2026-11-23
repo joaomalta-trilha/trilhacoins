@@ -59,6 +59,10 @@ export interface UsuarioRow {
   ativo: boolean;
   /** só relevante quando papel === "coordenacao" — assessores que essa pessoa gerencia */
   carteira: string[];
+  /** Hub (migration 0007): nome de exibição e cargo — o cargo é só rótulo */
+  nome: string | null;
+  cargo: string | null;
+  clickupUserId: number | null;
 }
 
 export interface LogRow {

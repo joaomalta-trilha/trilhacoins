@@ -23,9 +23,9 @@ export async function lancarMetaAction(params: {
 }): Promise<Resultado> {
   try {
     await repo.lancarMeta(params);
-    revalidatePath("/lancar");
-    revalidatePath("/equipe");
-    revalidatePath(`/assessor/${params.assessorId}`);
+    revalidatePath("/coins/lancar");
+    revalidatePath("/coins/equipe");
+    revalidatePath(`/coins/assessor/${params.assessorId}`);
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -35,9 +35,9 @@ export async function lancarMetaAction(params: {
 export async function limparLancamentoAction(assessorId: string, mes: string): Promise<Resultado> {
   try {
     await repo.limparLancamentosDoAssessorNoMes(assessorId, mes);
-    revalidatePath("/lancar");
-    revalidatePath("/equipe");
-    revalidatePath(`/assessor/${assessorId}`);
+    revalidatePath("/coins/lancar");
+    revalidatePath("/coins/equipe");
+    revalidatePath(`/coins/assessor/${assessorId}`);
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -47,9 +47,9 @@ export async function limparLancamentoAction(assessorId: string, mes: string): P
 export async function fecharMesAction(mes: string): Promise<Resultado> {
   try {
     await repo.fecharMes(mes);
-    revalidatePath("/lancar");
-    revalidatePath("/equipe");
-    revalidatePath("/assessor/[id]", "page");
+    revalidatePath("/coins/lancar");
+    revalidatePath("/coins/equipe");
+    revalidatePath("/coins/assessor/[id]", "page");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -59,9 +59,9 @@ export async function fecharMesAction(mes: string): Promise<Resultado> {
 export async function reabrirMesAction(mes: string): Promise<Resultado> {
   try {
     await repo.reabrirMes(mes);
-    revalidatePath("/lancar");
-    revalidatePath("/equipe");
-    revalidatePath("/assessor/[id]", "page");
+    revalidatePath("/coins/lancar");
+    revalidatePath("/coins/equipe");
+    revalidatePath("/coins/assessor/[id]", "page");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -71,9 +71,9 @@ export async function reabrirMesAction(mes: string): Promise<Resultado> {
 export async function efetivarPromocaoAction(assessorId: string): Promise<Resultado> {
   try {
     await repo.efetivarPromocao(assessorId);
-    revalidatePath("/equipe");
-    revalidatePath("/ajustes");
-    revalidatePath(`/assessor/${assessorId}`);
+    revalidatePath("/coins/equipe");
+    revalidatePath("/coins/ajustes");
+    revalidatePath(`/coins/assessor/${assessorId}`);
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -87,8 +87,8 @@ export async function marcarRequisitoMacroAction(
 ): Promise<Resultado> {
   try {
     await repo.marcarRequisitoMacro(assessorId, nivel, atendido);
-    revalidatePath("/equipe");
-    revalidatePath(`/assessor/${assessorId}`);
+    revalidatePath("/coins/equipe");
+    revalidatePath(`/coins/assessor/${assessorId}`);
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -101,9 +101,9 @@ export async function atualizarAssessorAction(
 ): Promise<Resultado> {
   try {
     await repo.atualizarAssessor(id, patch);
-    revalidatePath("/equipe");
-    revalidatePath("/ajustes");
-    revalidatePath(`/assessor/${id}`);
+    revalidatePath("/coins/equipe");
+    revalidatePath("/coins/ajustes");
+    revalidatePath(`/coins/assessor/${id}`);
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -116,7 +116,7 @@ export async function atualizarUsuarioAction(
 ): Promise<Resultado> {
   try {
     await repo.atualizarUsuario(id, patch);
-    revalidatePath("/ajustes");
+    revalidatePath("/coins/ajustes");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -126,9 +126,9 @@ export async function atualizarUsuarioAction(
 export async function atualizarCarteiraAction(usuarioId: string, assessorIds: string[]): Promise<Resultado> {
   try {
     await repo.atualizarCarteiraCoordenador(usuarioId, assessorIds);
-    revalidatePath("/ajustes");
-    revalidatePath("/equipe");
-    revalidatePath("/lancar");
+    revalidatePath("/coins/ajustes");
+    revalidatePath("/coins/equipe");
+    revalidatePath("/coins/lancar");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);

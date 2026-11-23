@@ -7,7 +7,7 @@ export default async function AssessorIndexPage() {
   const sessao = await obterSessao();
 
   if (sessao?.papel === "assessor") {
-    if (sessao.assessorId) redirect(`/assessor/${sessao.assessorId}`);
+    if (sessao.assessorId) redirect(`/coins/assessor/${sessao.assessorId}`);
     // Aprovado em Ajustes, mas ninguém escolheu a qual assessor essa
     // conta corresponde — não é um estado pra empurrar pra /equipe ou
     // /ajustes (páginas de gestão que essa pessoa não deveria ver).
@@ -25,7 +25,7 @@ export default async function AssessorIndexPage() {
 
   const assessores = await listarAssessoresAtivos();
   if (assessores.length === 0) {
-    redirect("/ajustes");
+    redirect("/coins/ajustes");
   }
-  redirect(`/assessor/${assessores[0].id}`);
+  redirect(`/coins/assessor/${assessores[0].id}`);
 }

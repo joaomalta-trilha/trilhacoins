@@ -1,8 +1,8 @@
+import Link from "next/link";
 import { listarAssessores, listarLog, listarPromocoes, listarUsuarios } from "@/lib/data/repo";
 import { exigirDiretoria } from "@/lib/auth/sessao";
 import { AjustesAssessores } from "@/components/ajustes-assessores";
 import { AjustesLog } from "@/components/ajustes-log";
-import { AjustesUsuarios } from "@/components/ajustes-usuarios";
 import { ExportarJSON } from "@/components/exportar-json";
 import { Card, fmt, rotuloMes } from "@/components/ui";
 
@@ -14,17 +14,25 @@ export default async function AjustesPage() {
     listarUsuarios(),
     listarLog(),
   ]);
+  const pendentes = usuarios.filter((u) => !u.ativo).length;
 
   return (
     <>
-      <h3 style={{ fontSize: 16, marginBottom: 8 }}>Usuários</h3>
-      <p style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: -4, marginBottom: 8 }}>
-        Toda pessoa que loga pela primeira vez aparece aqui inativa. Defina o papel, vincule ao
-        assessor correspondente (se for o caso) e marque ativo para liberar o acesso.
-      </p>
-      <AjustesUsuarios usuarios={usuarios} assessores={assessores.map((a) => ({ id: a.id, nome: a.nome }))} />
+      <div className="aviso" style={{ marginBottom: 20 }}>
+        Usuários e papéis agora ficam no Hub, em{" "}
+        <Link href="/gestao/usuarios" className="btn-link">
+          Gestão → Usuários
+        </Link>
+        {pendentes > 0 && (
+          <strong>
+            {" "}
+            · {pendentes === 1 ? "1 pessoa esperando" : `${pendentes} pessoas esperando`} aprovação
+          </strong>
+        )}
+        .
+      </div>
 
-      <h3 style={{ fontSize: 16, marginTop: 28, marginBottom: 8 }}>Assessores</h3>
+      <h3 style={{ fontSize: 16, marginBottom: 8 }}>Assessores</h3>
       <AjustesAssessores
         assessores={assessores.map((a) => ({
           id: a.id,

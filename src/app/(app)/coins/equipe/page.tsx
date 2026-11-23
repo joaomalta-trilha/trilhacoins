@@ -87,7 +87,7 @@ export default async function EquipePage({
               {ranking.map((p) => (
                 <tr key={p.assessorId}>
                   <td>
-                    <Link href={`/assessor/${p.assessorId}`} className="btn-link">
+                    <Link href={`/coins/assessor/${p.assessorId}`} className="btn-link">
                       {p.nome}
                     </Link>
                   </td>
@@ -185,7 +185,7 @@ export default async function EquipePage({
                 return (
                   <tr key={r.assessorId}>
                     <td>
-                      <Link href={`/assessor/${r.assessorId}`} className="btn-link">
+                      <Link href={`/coins/assessor/${r.assessorId}`} className="btn-link">
                         {r.nome}
                       </Link>
                       <div style={{ fontSize: 11, color: "var(--texto-suave)" }}>{r.nivel}</div>

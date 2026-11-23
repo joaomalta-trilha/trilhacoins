@@ -1,70 +1,109 @@
 import { redirect } from "next/navigation";
-import { obterSessao, obterUsuarioAutenticado } from "@/lib/auth/sessao";
+import { ArrowLeftRight, LogOut } from "lucide-react";
+import { obterUsuarioAutenticado } from "@/lib/auth/sessao";
+import { obterContexto } from "@/lib/hub/contexto";
+import { itensDeNavegacao, rotuloPapel } from "@/lib/hub/navegacao";
 import { sairAction } from "@/app/auth/actions";
-import { NavTabs } from "@/components/nav-tabs";
-import { LogoTrilhaCoins } from "@/components/marca";
+import { trocarModoAction } from "@/app/hub-actions";
+import { LogoTrilha } from "@/components/hub/logo-trilha";
+import { MenuAbas, MenuLateral } from "@/components/hub/menu";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const usuarioAuth = await obterUsuarioAutenticado();
   if (!usuarioAuth) redirect("/login");
 
-  const sessao = await obterSessao();
+  const ctx = await obterContexto();
 
-  return (
-    <div style={{ maxWidth: 1180, margin: "0 auto", padding: "26px 22px 60px" }}>
-      <header
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 14,
-        }}
-      >
-        <LogoTrilhaCoins />
-        {sessao && (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{sessao.nome}</div>
-              <div style={{ fontSize: 11, color: "var(--texto-suave)" }}>
-                {sessao.email} ·{" "}
-                {sessao.papel === "diretoria"
-                  ? "diretoria"
-                  : sessao.papel === "coordenacao"
-                    ? "coordenação"
-                    : "assessor"}
-              </div>
-            </div>
-            <form action={sairAction}>
-              <button type="submit" className="btn-link" style={{ fontSize: 12 }}>
-                Sair
-              </button>
-            </form>
-          </div>
-        )}
-      </header>
-
-      {!sessao ? (
-        <div className="card" style={{ marginTop: 26, maxWidth: 480 }}>
+  if (!ctx) {
+    return (
+      <div className="tela-centro">
+        <LogoTrilha altura={30} />
+        <div className="card" style={{ maxWidth: 440 }}>
           <div className="rotulo">Sem acesso</div>
-          <p style={{ fontSize: 13, marginTop: 10 }}>
-            Você está logado como <strong>{usuarioAuth.email}</strong>, mas ainda não tem um
-            cadastro liberado no TrilhaCoins. Peça para a diretoria te adicionar em Ajustes.
+          <p style={{ fontSize: 14, marginTop: 10 }}>
+            Você entrou como <strong>{usuarioAuth.email}</strong>, mas o seu acesso ao Trilha Hub ainda não foi
+            liberado. Peça para a diretoria aprovar o seu cadastro em Usuários.
           </p>
           <form action={sairAction} style={{ marginTop: 14 }}>
             <button type="submit" className="btn btn-secundario">
-              Sair e tentar com outra conta
+              Sair e entrar com outra conta
             </button>
           </form>
         </div>
-      ) : (
-        <>
-          <div style={{ marginTop: 22 }}>
-            <NavTabs papel={sessao.papel} />
-          </div>
-          <main style={{ marginTop: 24 }}>{children}</main>
-        </>
+      </div>
+    );
+  }
+
+  const { sessao, modo, podeTrocarModo } = ctx;
+  const itens = itensDeNavegacao(sessao.papel, modo);
+  const papel = rotuloPapel(sessao.papel, sessao.cargo);
+  const outroModo = modo === "gestao" ? "assessor" : "gestao";
+  const rotuloTroca = modo === "gestao" ? "Ver como assessor" : "Voltar para a gestão";
+
+  const pessoa = (
+    <div className="hub-pessoa">
+      <div className="hub-avatar" aria-hidden="true">
+        {sessao.nome.slice(0, 1).toUpperCase()}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div className="hub-pessoa-nome">{sessao.nome}</div>
+        <div className="hub-pessoa-papel">{papel}</div>
+      </div>
+    </div>
+  );
+
+  const acoes = (
+    <div className="hub-acoes">
+      {podeTrocarModo && (
+        <form action={trocarModoAction.bind(null, outroModo)}>
+          <button type="submit" className="hub-acao">
+            <ArrowLeftRight size={15} strokeWidth={1.6} aria-hidden="true" />
+            {rotuloTroca}
+          </button>
+        </form>
       )}
+      <form action={sairAction}>
+        <button type="submit" className="hub-acao">
+          <LogOut size={15} strokeWidth={1.6} aria-hidden="true" />
+          Sair
+        </button>
+      </form>
+    </div>
+  );
+
+  return (
+    <div className="hub">
+      <aside className="hub-lateral">
+        <div className="hub-marca">
+          <LogoTrilha altura={22} />
+          <span className="hub-marca-sub">Hub · {modo === "gestao" ? "Gestão" : "Assessor"}</span>
+        </div>
+        <MenuLateral itens={itens} />
+        <div className="hub-lateral-pe">
+          {pessoa}
+          {acoes}
+        </div>
+      </aside>
+
+      <div className="hub-corpo">
+        <header className="hub-topo-movel">
+          <LogoTrilha altura={18} />
+          <details className="hub-menu-pessoa">
+            <summary aria-label="Conta e experiência">
+              <span className="hub-avatar" aria-hidden="true">
+                {sessao.nome.slice(0, 1).toUpperCase()}
+              </span>
+            </summary>
+            <div className="hub-menu-pessoa-painel">
+              {pessoa}
+              {acoes}
+            </div>
+          </details>
+        </header>
+        <main className="hub-main">{children}</main>
+      </div>
+
+      <MenuAbas itens={itens} />
     </div>
   );
 }

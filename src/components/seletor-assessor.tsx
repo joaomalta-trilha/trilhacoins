@@ -14,7 +14,7 @@ export function SeletorAssessor({
 
   function onChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const qs = searchParams.toString();
-    router.push(`/assessor/${e.target.value}${qs ? `?${qs}` : ""}`);
+    router.push(`/coins/assessor/${e.target.value}${qs ? `?${qs}` : ""}`);
   }
 
   return (

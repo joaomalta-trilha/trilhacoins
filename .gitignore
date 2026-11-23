@@ -36,3 +36,14 @@ next-env.d.ts
 # supabase
 .supabase/
 /data/
+
+# Trilha Hub — material interno (nomes de clientes e pessoas, dados de
+# operação). O repositório é público: nada disso entra no git.
+BRIEFING-trilhahub.md
+
+# A pasta do projeto fica na Área de Trabalho, sincronizada pelo iCloud:
+# dependências e build ficam em pastas ".nosync" (o iCloud ignora) com um
+# atalho no nome original.
+/node_modules.nosync
+/.next.nosync
+/.next

@@ -8,7 +8,31 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# TrilhaCoins
+# Trilha Hub
+
+Este repositório é o **Trilha Hub**: o hub da operação da Trilha (carteira,
+dossiês, rotinas, Trilha do Assessor, gestão) construído sobre o TrilhaCoins,
+que virou o módulo `/coins`. Especificação e decisões em
+`BRIEFING-trilhahub.md` (na raiz, **fora do git** — tem nome de cliente e
+dado interno; leia antes de mudar regra de negócio do Hub).
+
+Regras do Hub, além das do Coins abaixo:
+
+- **O repositório é público.** Nenhum dado de cliente, pessoa, ID do ClickUp
+  ou conteúdo interno entra no git: dado vive no banco; importações e
+  material de referência ficam em `data/` (ignorado).
+- Papéis continuam três (`diretoria`, `coordenacao`, `assessor`). O gerente
+  de performance tem papel `diretoria` (mesmos acessos); `usuarios.cargo` é
+  só rótulo.
+- Dossiê: o assessor vê os clientes da própria carteira e os liberados pela
+  diretoria (`dossie_liberacoes` ou `clientes.dossie_aberto_a_todos`).
+  A regra está em `pode_ver_cliente()` (migration 0007).
+- Regras puras do Hub ficam em `src/lib/hub/` com teste ao lado; o banco só
+  é acessado por `src/lib/data/hub.ts` e `src/lib/data/repo.ts`.
+- Migrations novas: idempotentes e aditivas — a diretoria roda no SQL
+  Editor do Supabase com o Coins em produção.
+
+# TrilhaCoins (módulo /coins)
 
 Sistema interno de gestão do plano de carreira dos Assessores de Marketing
 da Trilha Performance Digital. Especificação completa em
@@ -59,7 +83,7 @@ uma linha em `usuarios` automaticamente (inativa, papel `assessor`
 por padrão) no primeiro login de qualquer pessoa, via trigger em
 `auth.users`. A diretoria aprova — define papel, vincula ao assessor
 correspondente se for o caso, marca ativo — na seção "Usuários" de
-Ajustes (`src/components/ajustes-usuarios.tsx`). Continua valendo o
+Gestão → Usuários (`src/app/(app)/gestao/usuarios/`, componente `src/components/ajustes-usuarios.tsx`). Continua valendo o
 "quem loga sem cadastro aprovado não entra em nada" do §4.
 
 **Carteira de coordenação** (não é uma das etapas do §11, extensão do
