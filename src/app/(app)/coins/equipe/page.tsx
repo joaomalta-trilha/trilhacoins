@@ -41,7 +41,7 @@ export default async function EquipePage({
 
   const badgeStatus =
     status === "fechada" ? "Fechado" : status === "sem-apuracao" ? "Sem apuração" : "Aberto";
-  const badgeCor = status === "fechada" ? "var(--trilha-verde-profundo)" : "var(--acento)";
+  const badgeCor = status === "fechada" ? "var(--ok-ink)" : "var(--accent-ink)";
 
   return (
     <>
@@ -54,7 +54,7 @@ export default async function EquipePage({
       )}
 
       <section
-        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}
       >
         <Resumo
           titulo="Prontos por saldo"
@@ -69,7 +69,7 @@ export default async function EquipePage({
         />
       </section>
 
-      <Card style={{ marginTop: 12, padding: 0, overflow: "hidden" }}>
+      <Card style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table className="tabela" style={{ minWidth: 900 }}>
             <thead>
@@ -93,7 +93,7 @@ export default async function EquipePage({
                   </td>
                   <td style={{ color: "var(--texto-suave)" }}>{p.nivelAtual}</td>
                   <td>{p.proximoNivel ?? "—"}</td>
-                  <td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(p.saldo)}</td>
+                  <td style={{ textAlign: "right", fontWeight: 500 }}>{fmt(p.saldo)}</td>
                   <td style={{ textAlign: "right", color: "var(--texto-suave)" }}>
                     {p.custoProximaTransicao ? fmt(p.custoProximaTransicao) : "—"}
                   </td>
@@ -104,7 +104,7 @@ export default async function EquipePage({
                           <div style={{ flex: 1 }}>
                             <Barra
                               pct={p.pctNivel}
-                              cor={p.aptoPorSaldo ? "var(--trilha-verde-confirmacao)" : undefined}
+                              cor={p.aptoPorSaldo ? "var(--ok)" : undefined}
                             />
                           </div>
                           <span style={{ fontWeight: 600, minWidth: 38, textAlign: "right" }}>
@@ -137,16 +137,14 @@ export default async function EquipePage({
         </div>
       </Card>
 
-      <p style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 8, maxWidth: 760 }}>
+      <p className="nota-rodape" style={{ marginTop: 12 }}>
         A data de promoção assume 100% da base recorrente (1.300 coins/mês), sem bônus, e conta o
         mês corrente ainda aberto. Upsell, indicação e certificação antecipam o checkpoint.
       </p>
 
       <div
         style={{
-          marginTop: 30,
-          borderTop: "1px solid var(--borda)",
-          paddingTop: 18,
+          marginTop: 48,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -155,11 +153,11 @@ export default async function EquipePage({
         }}
       >
         <div>
-          <h3 style={{ fontSize: 17, display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ font: "400 26px/1.1 var(--fonte)", letterSpacing: "-0.01em", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             Apuração de {rotuloMes(mes)}
             <Tag texto={badgeStatus} cor={badgeCor} />
-          </h3>
-          <div style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 3 }}>
+          </h2>
+          <div style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 6 }}>
             {lancados}/{resumoMes.length} assessores lançados · {fmt(totalMesEquipe)} coins gerados
             de um teto recorrente de {fmt(BASE_MENSAL * resumoMes.length)}
           </div>
@@ -167,7 +165,7 @@ export default async function EquipePage({
         <SeletorMes meses={meses} mesAtual={mes} />
       </div>
 
-      <Card style={{ marginTop: 12, padding: 0, overflow: "hidden" }}>
+      <Card style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
         <div style={{ overflowX: "auto" }}>
           <table className="tabela" style={{ minWidth: 760 }}>
             <thead>
@@ -203,7 +201,7 @@ export default async function EquipePage({
                         </span>
                       </div>
                       {!r.lancado && (
-                        <span style={{ fontSize: 11, color: "var(--acento)" }}>sem lançamento</span>
+                        <span style={{ fontSize: 11, color: "var(--accent-ink)" }}>sem lançamento</span>
                       )}
                     </td>
                     <td style={{ textAlign: "right" }}>{r.coinsBonus ? `+${fmt(r.coinsBonus)}` : "—"}</td>

@@ -356,7 +356,7 @@ export function resumoDoItem(texto: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .trim();
   const doisPontos = s.indexOf(":");
-  if (doisPontos > 3 && doisPontos <= 48) return s.slice(0, doisPontos);
+  if (doisPontos > 3 && doisPontos <= 60) return s.slice(0, doisPontos);
   const frase = s.split(/(?<=[.;])\s/)[0];
   if (frase.length <= 60) return frase.replace(/[.;]$/, "");
   const corte = frase.slice(0, 58);

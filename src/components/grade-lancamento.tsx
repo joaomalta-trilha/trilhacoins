@@ -97,15 +97,13 @@ export function GradeLancamento({
         }}
       >
         <div>
-          <h2 style={{ fontSize: 18, display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{ font: "400 26px/1.1 var(--fonte)", letterSpacing: "-0.01em", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             Apuração de {rotuloMes(mes)}
             {ehCheckpoint(mes) && (
-              <span style={{ color: "var(--acento)", fontSize: 13, fontWeight: 400 }}>
-                mês de checkpoint
-              </span>
+              <span className="chip chip-acento">mês de checkpoint</span>
             )}
           </h2>
-          <div style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 3 }}>
+          <div style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 6 }}>
             {fechado
               ? `Mês fechado — os assessores já enxergam ${rotuloMes(mes)}.`
               : "Aberto · as alterações salvam sozinhas."}
@@ -145,7 +143,7 @@ export function GradeLancamento({
           <table className="tabela" style={{ minWidth: 1050, fontSize: "12.5px" }}>
             <thead>
               <tr>
-                <th style={{ position: "sticky", left: 0, background: "var(--trilha-verde-grafite)", minWidth: 150 }}>
+                <th style={{ position: "sticky", left: 0, zIndex: 1, background: "var(--card)", minWidth: 150 }}>
                   Assessor
                 </th>
                 {METAS.map((m) => (
@@ -161,7 +159,7 @@ export function GradeLancamento({
                 const l = dados[a.id] ?? {};
                 return (
                   <tr key={a.id}>
-                    <td style={{ position: "sticky", left: 0, background: "inherit", fontWeight: 600 }}>
+                    <td style={{ position: "sticky", left: 0, zIndex: 1, background: "var(--card)", fontWeight: 500 }}>
                       {a.nome}
                       <div style={{ fontSize: 11, color: "var(--texto-suave)", fontWeight: 400 }}>{a.nivel}</div>
                       {editavel && Object.keys(l).length > 0 && (
@@ -169,14 +167,8 @@ export function GradeLancamento({
                           type="button"
                           onClick={() => limparAssessor(a.id, a.nome)}
                           title={`Apagar os lançamentos de ${rotuloMes(mes)}`}
-                          className="btn-secundario"
-                          style={{
-                            marginTop: 6,
-                            borderRadius: 3,
-                            padding: "2px 7px",
-                            fontSize: 11,
-                            fontWeight: 400,
-                          }}
+                          className="btn btn-secundario"
+                          style={{ marginTop: 8, height: 28, padding: "0 12px", fontSize: 11 }}
                         >
                           Limpar mês
                         </button>
@@ -193,7 +185,7 @@ export function GradeLancamento({
                       </td>
                     ))}
                     <td style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: 700, color: "var(--texto-forte)" }}>{fmt(totalMes(METAS, l))}</div>
+                      <div style={{ fontWeight: 500, color: "var(--texto-forte)" }}>{fmt(totalMes(METAS, l))}</div>
                       <div style={{ fontSize: 11, color: "var(--texto-suave)" }}>
                         {Math.round((totalRecorrente(METAS, l) / 1300) * 100)}% da base
                       </div>
@@ -225,7 +217,7 @@ function CampoMeta({
     <div
       style={{
         fontSize: 11,
-        color: coins > 0 ? "var(--acento)" : "var(--trilha-verde-nevoa)",
+        color: coins > 0 ? "var(--accent-ink)" : "var(--muted)",
         marginTop: 2,
       }}
     >

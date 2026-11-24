@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { MigracaoPendenteError, listarConteudos, obterConteudo } from "@/lib/data/hub";
-import { AvisoMigracao, Chip } from "@/components/hub/basicos";
+import { AvisoMigracao, Cena, Chip, Seta, Voltar } from "@/components/hub/basicos";
 import { Md } from "@/components/hub/markdown";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const conteudo = await obterConteudo(decodeURIComponent(slug)).catch(() => null);
+  return { title: conteudo?.titulo ?? "Trilha do Assessor" };
+}
 
 export default async function ConteudoTrilhaPage({ params }: { params: Promise<{ slug: string }> }) {
   const ctx = await obterContexto();
@@ -16,53 +22,85 @@ export default async function ConteudoTrilhaPage({ params }: { params: Promise<{
   try {
     [conteudo, todos] = await Promise.all([obterConteudo(decodeURIComponent(slug)), listarConteudos("trilha")]);
   } catch (e) {
-    if (e instanceof MigracaoPendenteError) return <AvisoMigracao />;
+    if (e instanceof MigracaoPendenteError) {
+      return (
+        <Cena>
+          <div style={{ marginTop: 28 }}>
+            <AvisoMigracao />
+          </div>
+        </Cena>
+      );
+    }
     throw e;
   }
   if (!conteudo) notFound();
 
-  const sequencia = todos.filter((c) => c.slug !== "comece-aqui");
+  // "Comece por aqui" abre a sequência; as etapas seguem na ordem.
+  const sequencia = [...todos.filter((c) => c.slug === "comece-aqui"), ...todos.filter((c) => c.slug !== "comece-aqui")];
   const i = sequencia.findIndex((c) => c.id === conteudo.id);
   const anterior = i > 0 ? sequencia[i - 1] : null;
   const proximo = i >= 0 && i < sequencia.length - 1 ? sequencia[i + 1] : null;
 
   return (
-    <article className="conteudo">
-      <header className="conteudo-topo">
-        <div className="cliente-topo-linha">
-          <Link href="/trilha" className="voltar">
-            ← Trilha do Assessor
-          </Link>
+    <Cena>
+      <article className="conteudo">
+        <div className="acoes-topo">
+          <Voltar href="/trilha">Trilha do Assessor</Voltar>
           {ctx.sessao.papel === "diretoria" && (
-            <Link href={`/trilha/${conteudo.slug}/editar`} className="btn btn-secundario btn-icone">
-              <Pencil size={14} strokeWidth={1.6} aria-hidden="true" /> Editar
+            <Link href={`/trilha/${conteudo.slug}/editar`} className="btn btn-secundario">
+              <Pencil strokeWidth={1.6} aria-hidden="true" />
+              Editar
             </Link>
           )}
         </div>
-        {conteudo.etapa && <p className="rotulo">{conteudo.etapa}</p>}
-        <h1>{conteudo.titulo}</h1>
-        {conteudo.resumo && <p className="lede">{conteudo.resumo}</p>}
-        {!conteudo.publicado && <Chip tom="atencao">Rascunho — só a diretoria vê</Chip>}
-      </header>
+        <header className="heroi simples">
+          <div>
+            <h1>{conteudo.titulo}</h1>
+            {(conteudo.resumo || conteudo.etapa) && (
+              <p className="lede">
+                {conteudo.etapa ? `${conteudo.etapa}. ` : ""}
+                {conteudo.resumo}
+              </p>
+            )}
+            {!conteudo.publicado && (
+              <div className="sub-row">
+                <Chip tom="atencao">Rascunho, só a diretoria vê</Chip>
+              </div>
+            )}
+          </div>
+        </header>
 
-      <Md texto={conteudo.corpoMd} className="conteudo-corpo" />
+        <Md texto={conteudo.corpoMd} className="conteudo-corpo" />
 
-      <nav className="conteudo-nav" aria-label="Etapas da Trilha">
-        {anterior ? (
-          <Link href={`/trilha/${anterior.slug}`} className="card">
-            <span className="rotulo">Anterior</span>
-            <b>{anterior.titulo}</b>
-          </Link>
-        ) : (
-          <span />
+        {(anterior || proximo) && (
+          <nav className="conteudo-nav" aria-label="Etapas da Trilha">
+            {anterior && (
+              <Link href={`/trilha/${anterior.slug}`} className="card anterior">
+                <div className="card-hd">
+                  <span className="btn-circulo" aria-hidden="true">
+                    <ArrowLeft strokeWidth={1.8} />
+                  </span>
+                </div>
+                <div className="card-t">
+                  {anterior.titulo}
+                  <small>Volta para a parte anterior</small>
+                </div>
+              </Link>
+            )}
+            {proximo && (
+              <Link href={`/trilha/${proximo.slug}`} className="card proximo">
+                <div className="card-hd" style={{ justifyContent: "flex-end" }}>
+                  <Seta />
+                </div>
+                <div className="card-t">
+                  {proximo.titulo}
+                  <small>Próxima parte da Trilha</small>
+                </div>
+              </Link>
+            )}
+          </nav>
         )}
-        {proximo && (
-          <Link href={`/trilha/${proximo.slug}`} className="card proximo">
-            <span className="rotulo">Próxima</span>
-            <b>{proximo.titulo}</b>
-          </Link>
-        )}
-      </nav>
-    </article>
+      </article>
+    </Cena>
   );
 }

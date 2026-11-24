@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Briefcase } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import {
   type ClienteRow,
@@ -10,14 +11,27 @@ import {
 } from "@/lib/data/hub";
 import { listarAssessoresAtivos } from "@/lib/data/repo";
 import { resumirCarteira } from "@/lib/hub/exigencia";
-import { AvisoMigracao, PaginaTopo } from "@/components/hub/basicos";
-import { type CartaoCliente, type GrupoClientes, ListaClientes } from "@/components/hub/lista-clientes";
+import { AvisoMigracao, Cena, Ic, PaginaTopo, iniciais } from "@/components/hub/basicos";
+import { type CartaoCliente, type Filtro, type GrupoClientes, ListaClientes } from "@/components/hub/lista-clientes";
 import { SeletorVerComo } from "@/components/hub/ver-como";
+import { Barra } from "@/components/ui";
+
+export const metadata = { title: "Clientes" };
+
+const FILTROS_VALIDOS: Filtro[] = ["todos", "atencao", "sem-dossie", "sem-assessor", "pausados"];
+
+const ROTULO_SITUACAO: Record<string, string> = {
+  equilibrada: "equilibrada para o nível",
+  "quase-completa": "perto do limite do nível",
+  completa: "completa para o nível",
+  "sem-nivel": "nível a definir",
+};
 
 function cartao(c: ClienteRow, comDossie: Set<string>): CartaoCliente {
   return {
     slug: c.slug,
     nome: c.nome,
+    iniciais: iniciais(c.nome),
     frase: c.frase || c.objetivo,
     pacote: c.pacote,
     status: c.status,
@@ -32,9 +46,11 @@ function cartao(c: ClienteRow, comDossie: Set<string>): CartaoCliente {
 /** Quem pede atenção primeiro, depois por nome. */
 const ordem = (a: ClienteRow, b: ClienteRow) => Number(b.pedeAtencao) - Number(a.pedeAtencao) || a.nome.localeCompare(b.nome);
 
-export default async function ClientesPage() {
+export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
   const ctx = await obterContexto();
   if (!ctx) redirect("/");
+  const { filtro } = await searchParams;
+  const filtroInicial = FILTROS_VALIDOS.includes(filtro as Filtro) ? (filtro as Filtro) : "todos";
 
   let clientes: ClienteRow[];
   let comDossie: Set<string>;
@@ -50,10 +66,12 @@ export default async function ClientesPage() {
   } catch (e) {
     if (e instanceof MigracaoPendenteError) {
       return (
-        <>
-          <PaginaTopo rotulo="Clientes" titulo={ctx.modo === "gestao" ? "Clientes" : "Minha carteira"} />
-          <AvisoMigracao />
-        </>
+        <Cena>
+          <PaginaTopo titulo={ctx.modo === "gestao" ? "Clientes" : "Minha carteira"} />
+          <div style={{ marginTop: 28 }}>
+            <AvisoMigracao />
+          </div>
+        </Cena>
       );
     }
     throw e;
@@ -68,13 +86,13 @@ export default async function ClientesPage() {
       .filter((c) => c.assessorId !== alvo?.id && (c.dossieAbertoATodos || liberadosIds.has(c.id)))
       .sort(ordem);
     const resumo = resumirCarteira(meus.map((c) => c.exigenciaPts), alvo?.nivel);
+    const atencao = meus.filter((c) => c.pedeAtencao).length;
 
     const grupos: GrupoClientes[] = [
       {
         chave: "minha",
-        titulo: alvo ? `Carteira de ${alvo.nome}` : "Sua carteira",
-        subtitulo: `${meus.length} ${meus.length === 1 ? "cliente" : "clientes"} · comece pelos que pedem atenção`,
-        carteira: { pts: resumo.pts, teto: resumo.teto?.pts ?? null, pct: resumo.pct, situacao: resumo.situacao, nivel: alvo?.nivel ?? null },
+        titulo: alvo && ctx.sessao.papel !== "assessor" ? `Carteira de ${alvo.nome}` : "Sua carteira",
+        subtitulo: `${meus.length} ${meus.length === 1 ? "cliente" : "clientes"}, quem pede atenção primeiro`,
         clientes: meus.map((c) => cartao(c, comDossie)),
       },
     ];
@@ -88,22 +106,47 @@ export default async function ClientesPage() {
     }
 
     return (
-      <>
+      <Cena>
         <PaginaTopo
-          rotulo="Assessor"
           titulo="Minha carteira"
           lede="Um dossiê por cliente: objetivo, meta, contatos, atalhos para as contas, rotina da semana, cuidados e a análise da conta."
+          lado={
+            <div className="card carteira-cartao">
+              <div className="card-hd">
+                <Ic>
+                  <Briefcase strokeWidth={1.6} />
+                </Ic>
+                {alvo?.nivel && <span className="chip">{alvo.nivel}</span>}
+              </div>
+              <div className="num grande">
+                {resumo.pts}
+                <small>{resumo.teto ? `de ${resumo.teto.pts} pontos de exigência` : "pontos de exigência"}</small>
+              </div>
+              {resumo.teto && (
+                <div className={`sit-${resumo.situacao}`}>
+                  <Barra pct={resumo.pct ?? 0} />
+                </div>
+              )}
+              <div className="linha-meta">
+                <span>
+                  {meus.length} {meus.length === 1 ? "cliente" : "clientes"}
+                  {atencao ? ` · ${atencao} ${atencao === 1 ? "pede" : "pedem"} atenção` : ""}
+                </span>
+                <span>Carteira {ROTULO_SITUACAO[resumo.situacao]}</span>
+              </div>
+            </div>
+          }
         >
           <SeletorVerComo opcoes={ctx.opcoesVerComo} selecionadoId={alvo?.id ?? null} />
         </PaginaTopo>
         {!alvo && (
-          <div className="aviso aviso-atencao">
+          <div className="aviso aviso-atencao" style={{ marginTop: 28 }}>
             Seu acesso está liberado, mas ainda não foi vinculado a um assessor. Peça à diretoria para escolher o seu nome
             em Usuários.
           </div>
         )}
-        <ListaClientes grupos={grupos} mostrarGestao={false} />
-      </>
+        <ListaClientes grupos={grupos} mostrarGestao={false} filtroInicial={filtroInicial} />
+      </Cena>
     );
   }
 
@@ -149,13 +192,12 @@ export default async function ClientesPage() {
   const pendentes = clientes.filter((c) => !comDossie.has(c.id)).length;
 
   return (
-    <>
+    <Cena>
       <PaginaTopo
-        rotulo="Gestão"
         titulo="Clientes"
-        lede={`${ativos} clientes ativos · ${pendentes} sem dossiê. Cada carteira mostra a soma da nota de exigência contra o teto do nível do assessor.`}
+        lede={`${ativos} clientes ativos e ${pendentes} sem dossiê. Cada carteira mostra a soma da nota de exigência contra o teto do nível do assessor.`}
       />
-      <ListaClientes grupos={grupos} mostrarGestao />
-    </>
+      <ListaClientes grupos={grupos} mostrarGestao filtroInicial={filtroInicial} />
+    </Cena>
   );
 }

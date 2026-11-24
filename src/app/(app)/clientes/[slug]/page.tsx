@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Pencil, Video } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { MigracaoPendenteError, diretorioAssessores, obterClientePorSlug } from "@/lib/data/hub";
 import { lerDossie, campo } from "@/lib/hub/dossie";
-import { AvisoMigracao, Chip, EmBreve, Estrelas } from "@/components/hub/basicos";
-import { DossieView } from "@/components/hub/dossie-view";
+import { AvisoMigracao, Cena, Chip, EmBreve, Estrelas, Faixa, PaginaTopo, Voltar } from "@/components/hub/basicos";
+import { Ancoras } from "@/components/hub/ancoras";
+import { DossieAnalise, DossieEssencial, DossieRotina, partesDoDossie } from "@/components/hub/dossie-view";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const dados = await obterClientePorSlug(decodeURIComponent(slug)).catch(() => null);
+  return { title: dados?.cliente.nome ?? "Cliente" };
+}
 
 export default async function ClientePage({ params }: { params: Promise<{ slug: string }> }) {
   const ctx = await obterContexto();
@@ -20,7 +27,15 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
       diretorioAssessores().then((l) => new Map(l.map((a) => [a.id, a.nome]))),
     ]);
   } catch (e) {
-    if (e instanceof MigracaoPendenteError) return <AvisoMigracao />;
+    if (e instanceof MigracaoPendenteError) {
+      return (
+        <Cena>
+          <div style={{ marginTop: 28 }}>
+            <AvisoMigracao />
+          </div>
+        </Cena>
+      );
+    }
     throw e;
   }
   // O RLS devolve "nada" tanto para cliente inexistente quanto para dossiê
@@ -30,78 +45,127 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
 
   const podeEditar = ctx.sessao.papel !== "assessor";
   const assessor = cliente.assessorId ? nomes.get(cliente.assessorId) : null;
-  const frase = dossie ? campo(lerDossie(dossie.conteudoMd), "Em uma frase") || cliente.frase : cliente.frase;
+  const d = dossie ? lerDossie(dossie.conteudoMd) : null;
+  const frase = (d && campo(d, "Em uma frase")) || cliente.frase;
   const ehDaCarteira = ctx.assessorAlvo && cliente.assessorId === ctx.assessorAlvo.id;
+  const audiovisual = /audiovisual/i.test(cliente.pacote ?? "");
+  const mostrarEmBreve = ehDaCarteira || ctx.modo === "gestao";
+
+  const emBreve = mostrarEmBreve ? (
+    <section className="dossie-secao" aria-labelledby="t-breve">
+      <h2 id="t-breve">Chega nas próximas fases</h2>
+      <div className="grade-2">
+        <EmBreve titulo="Tarefas e reuniões" fase="fase 3">
+          Tarefas abertas e atrasadas no ClickUp e as reuniões realizadas e agendadas deste cliente, direto da lista de
+          reuniões.
+        </EmBreve>
+        <EmBreve titulo="Grupo de WhatsApp" fase="fase 4">
+          Mensagens esperando resposta, insatisfações abertas e o termômetro do grupo, vindos do painel de saúde.
+        </EmBreve>
+      </div>
+    </section>
+  ) : null;
 
   return (
     <>
-      <header className="cliente-topo">
-        <div className="cliente-topo-linha">
-          <Link href="/clientes" className="voltar">
-            ← {ctx.modo === "gestao" ? "Clientes" : "Minha carteira"}
-          </Link>
+      <Cena>
+        <div className="acoes-topo">
+          <Voltar href="/clientes">{ctx.modo === "gestao" ? "Clientes" : "Minha carteira"}</Voltar>
           {podeEditar && (
-            <Link href={`/clientes/${cliente.slug}/editar`} className="btn btn-secundario btn-icone">
-              <Pencil size={14} strokeWidth={1.6} aria-hidden="true" /> Editar
+            <Link href={`/clientes/${cliente.slug}/editar`} className="btn btn-secundario">
+              <Pencil strokeWidth={1.6} aria-hidden="true" />
+              Editar
             </Link>
           )}
         </div>
-        <p className="rotulo">
-          {assessor ? `Assessor: ${assessor}` : "Sem assessor vinculado"}
-          {cliente.squad ? ` · Squad ${cliente.squad}` : ""}
-        </p>
-        <h1>{cliente.nome}</h1>
-        {frase && <p className="lede">{frase}</p>}
-        <div className="chips">
-          {cliente.exigenciaPts !== null && (
-            <Chip>
-              <Estrelas pts={cliente.exigenciaPts} comPontos />
-            </Chip>
+
+        <PaginaTopo
+          titulo={cliente.nome}
+          lede={frase || undefined}
+          lado={
+            <div className="fatos">
+              <div className="fato">
+                <span>Assessor</span>
+                <b>{assessor ?? "Sem assessor"}</b>
+              </div>
+              <div className="fato">
+                <span>Squad</span>
+                <b>{cliente.squad ?? "—"}</b>
+              </div>
+              <div className="fato">
+                <span>Nota de exigência</span>
+                <b>
+                  {cliente.exigenciaPts !== null ? `${cliente.exigenciaPts} pts` : "—"}{" "}
+                  <Estrelas pts={cliente.exigenciaPts} />
+                </b>
+              </div>
+              <div className="fato">
+                <span>Pacote</span>
+                <b>{cliente.pacote?.replace(/\s*\+\s*Audiovisual/i, "") ?? "—"}</b>
+              </div>
+            </div>
+          }
+        >
+          {(cliente.status !== "ativo" ||
+            cliente.pedeAtencao ||
+            cliente.pilotoAssistente ||
+            audiovisual ||
+            (ctx.modo === "assessor" && !ehDaCarteira)) && (
+            <div className="chips cliente-chips">
+              {cliente.status !== "ativo" && <Chip tom="escuro">{cliente.status === "pausado" ? "Pausado" : "Saiu"}</Chip>}
+              {cliente.pedeAtencao && <Chip tom="acento">Pede atenção</Chip>}
+              {audiovisual && (
+                <Chip>
+                  <Video strokeWidth={1.6} aria-hidden="true" />
+                  Audiovisual
+                </Chip>
+              )}
+              {cliente.pilotoAssistente && <Chip tom="atencao">Piloto do Claudinho</Chip>}
+              {ctx.modo === "assessor" && !ehDaCarteira && <Chip tom="ok">Liberado pela gestão</Chip>}
+            </div>
           )}
-          {cliente.pacote && <Chip>{cliente.pacote}</Chip>}
-          {cliente.status !== "ativo" && <Chip tom="escuro">{cliente.status === "pausado" ? "Pausado" : "Saiu"}</Chip>}
-          {cliente.pedeAtencao && <Chip tom="acento">Pede atenção</Chip>}
-          {cliente.pilotoAssistente && <Chip tom="atencao">Piloto do Claudinho</Chip>}
-          {ctx.modo === "assessor" && !ehDaCarteira && <Chip tom="ok">Liberado pela gestão</Chip>}
-        </div>
-      </header>
+        </PaginaTopo>
 
-      {/audiovisual/i.test(cliente.pacote ?? "") && (
-        <div className="card tom-areia faixa-av">
-          <b>🎥 Cliente com audiovisual: 4 vídeos gravados a cada 30 dias.</b> No começo de cada ciclo, combine o roteiro
-          com o cliente e as datas de gravação com o filmmaker, pela lista 🎥 Áudio-visual do ClickUp.
-        </div>
-      )}
+        {audiovisual && (
+          <div className="faixa-aviso">
+            <Video strokeWidth={1.6} aria-hidden="true" style={{ width: 18, height: 18, flex: "none", marginTop: 1 }} />
+            <span>
+              <b>Cliente com audiovisual: 4 vídeos gravados a cada 30 dias.</b> No começo de cada ciclo, combine o roteiro
+              com o cliente e as datas de gravação com o filmmaker, pela lista de audiovisual do ClickUp.
+            </span>
+          </div>
+        )}
+      </Cena>
 
-      {dossie ? (
-        <DossieView cliente={cliente} md={dossie.conteudoMd} />
+      {d && dossie ? (
+        <>
+          <Ancoras itens={partesDoDossie(d)} />
+          <Cena>
+            <DossieEssencial d={d} md={dossie.conteudoMd} />
+          </Cena>
+          <Faixa meio rotulo="Rotina da semana">
+            <DossieRotina d={d} cliente={cliente} />
+          </Faixa>
+          <Cena>
+            <DossieAnalise d={d} />
+            {emBreve}
+            <p className="nota-rodape" style={{ marginTop: 40 }}>
+              Dossiê versão {dossie.versao}, atualizado em{" "}
+              {new Date(dossie.atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Maceio" })}.
+            </p>
+          </Cena>
+        </>
       ) : (
-        <div className="card tom-areia">
-          <h3>Dossiê ainda não respondido</h3>
-          <p className="muted">
-            O dossiê sai quando a coordenação responder o formulário desse cliente.
-            {podeEditar && " Você pode escrever direto em Editar → Dossiê."}
-          </p>
-        </div>
-      )}
-
-      {ehDaCarteira || ctx.modo === "gestao" ? (
-        <div className="grade-2" style={{ marginTop: 28 }}>
-          <EmBreve titulo="Tarefas e reuniões" fase="fase 3">
-            Tarefas abertas e atrasadas no ClickUp e as reuniões realizadas e agendadas deste cliente, direto da lista 🗣️
-            Reuniões.
-          </EmBreve>
-          <EmBreve titulo="Grupo de WhatsApp" fase="fase 4">
-            Mensagens esperando resposta, insatisfações abertas e o termômetro do grupo, vindos do painel de saúde.
-          </EmBreve>
-        </div>
-      ) : null}
-
-      {dossie && (
-        <p className="nota-rodape">
-          Dossiê versão {dossie.versao} · atualizado em{" "}
-          {new Date(dossie.atualizadoEm).toLocaleDateString("pt-BR", { timeZone: "America/Maceio" })}
-        </p>
+        <Cena>
+          <div className="vazio" style={{ marginTop: 40 }}>
+            <b>Dossiê ainda não respondido</b>
+            <p>
+              O dossiê sai quando a coordenação responder o formulário desse cliente.
+              {podeEditar && " Você pode escrever direto em Editar, na parte Dossiê."}
+            </p>
+          </div>
+          {emBreve}
+        </Cena>
       )}
     </>
   );

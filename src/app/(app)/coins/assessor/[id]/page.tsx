@@ -60,43 +60,29 @@ export default async function AssessorPage({
 
   return (
     <>
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+      <div className="coins-cab" style={{ justifyContent: "flex-start" }}>
         {mostrarSeletor ? (
           <SeletorAssessor assessores={assessores.map((a) => ({ id: a.id, nome: a.nome }))} selecionadoId={id} />
         ) : (
-          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--texto-forte)", letterSpacing: "-0.02em" }}>
-            {painel.nome}
-          </div>
+          <h2>{painel.nome}</h2>
         )}
-        <span style={{ color: "var(--texto-suave)", fontSize: 13 }}>{painel.nivelAtual}</span>
+        <span className="chip">{painel.nivelAtual}</span>
       </div>
 
       {/* Panorama */}
-      <Card escuro style={{ marginTop: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: 24,
-            flexWrap: "wrap",
-          }}
-        >
+      <div className="card-escuro" style={{ marginTop: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 300px" }}>
-            <div className="rotulo" style={{ color: "var(--trilha-verde-nevoa)" }}>
-              Saldo acumulado
+            <div className="rotulo">Saldo acumulado</div>
+            <div className="saldo-grande" style={{ marginTop: 14 }}>
+              {fmt(painel.saldo)}
+              <small>coins</small>
             </div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4 }}>
-              <span style={{ fontSize: 54, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1 }}>
-                {fmt(painel.saldo)}
-              </span>
-              <span style={{ color: "var(--trilha-verde-nevoa)", fontSize: 14 }}>coins</span>
-            </div>
-            <div style={{ fontSize: 13, color: "var(--trilha-verde-nevoa)", marginTop: 8 }}>
+            <p style={{ fontSize: 14, color: "var(--dark-soft)", marginTop: 16 }}>
               {painel.custoProximaTransicao !== null ? (
                 painel.faltaCoins > 0 ? (
                   <>
-                    Faltam <strong style={{ color: "var(--acento)" }}>{fmt(painel.faltaCoins)} coins</strong> para{" "}
+                    Faltam <strong style={{ color: "var(--accent)" }}>{fmt(painel.faltaCoins)} coins</strong> para{" "}
                     {painel.proximoNivel}.
                   </>
                 ) : (
@@ -108,148 +94,135 @@ export default async function AssessorPage({
               ) : (
                 "Nível máximo da trilha."
               )}
-            </div>
+            </p>
           </div>
 
-          {painel.custoProximaTransicao !== null && (
-            <AnelProgresso pct={painel.pctNivel} apto={painel.aptoPorSaldo} />
-          )}
+          {painel.custoProximaTransicao !== null && <AnelProgresso pct={painel.pctNivel} apto={painel.aptoPorSaldo} />}
         </div>
 
-        <div style={{ marginTop: 22 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: 12,
-              color: "var(--trilha-verde-nevoa)",
-              marginBottom: 6,
-            }}
-          >
+        <div style={{ marginTop: 24 }}>
+          <div className="medidor-rotulo" style={{ fontSize: 12 }}>
             <span>{painel.nivelAtual}</span>
             <span>
               {painel.proximoNivel ?? "—"}
               {painel.custoProximaTransicao ? ` · ${fmt(painel.custoProximaTransicao)} coins` : ""}
             </span>
           </div>
-          <Barra pct={painel.pctNivel} alta cor={painel.aptoPorSaldo ? "var(--trilha-verde-confirmacao)" : undefined} />
+          <Barra pct={painel.pctNivel} alta cor={painel.aptoPorSaldo ? "var(--ok)" : undefined} />
           {painel.mesesAtePromocao && (
-            <div style={{ fontSize: 12, color: "var(--trilha-verde-nevoa)", marginTop: 8 }}>
-              Batendo 100% da base: {painel.mesesAtePromocao} {painel.mesesAtePromocao === 1 ? "mês" : "meses"}.
+            <div className="medidor-rotulo" style={{ fontSize: 12, marginTop: 8, marginBottom: 0 }}>
+              <span>
+                Batendo 100% da base: {painel.mesesAtePromocao} {painel.mesesAtePromocao === 1 ? "mês" : "meses"}.
+              </span>
             </div>
           )}
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-            marginTop: 24,
-            borderTop: "1px solid #333833",
-          }}
-        >
+        <div className="metricas-escuras">
           <MetricaEscura rotulo="Média mensal" valor={fmt(painel.mediaMensal)} nota="últimos 3 meses" />
           <MetricaEscura rotulo="Aproveitamento" valor={`${Math.round(painel.aproveitamento)}%`} nota="da base recorrente" />
-          <MetricaEscura rotulo="Total já ganho" valor={fmt(painel.totalGanho)} nota={`${historico.length} ${historico.length === 1 ? "mês lançado" : "meses lançados"}`} />
+          <MetricaEscura
+            rotulo="Total já ganho"
+            valor={fmt(painel.totalGanho)}
+            nota={`${historico.length} ${historico.length === 1 ? "mês lançado" : "meses lançados"}`}
+          />
           <MetricaEscura rotulo="Bônus acumulado" valor={fmt(painel.bonusAcumulado)} nota="upsell, indicação, certificação" />
-          <MetricaEscura rotulo="Gasto em promoções" valor={painel.totalGasto ? `−${fmt(painel.totalGasto)}` : "0"} nota="debitado do saldo" />
+          <MetricaEscura
+            rotulo="Gasto em promoções"
+            valor={painel.totalGasto ? `−${fmt(painel.totalGasto)}` : "0"}
+            nota="debitado do saldo"
+          />
           <MetricaEscura
             rotulo="Melhor mês"
             valor={painel.melhorMes ? fmt(painel.melhorMes.total) : "—"}
             nota={painel.melhorMes ? rotuloMes(painel.melhorMes.mes) : "sem histórico"}
           />
         </div>
-      </Card>
+      </div>
 
-      <BlocoCheckpoint
-        proximoCheckpoint={painel.proximoCheckpoint}
-        projetadoNoCheckpoint={painel.projetadoNoCheckpoint}
-        custoProximaTransicao={painel.custoProximaTransicao}
-        mesesAtePromocao={painel.mesesAtePromocao}
-        checkpointProvavel={painel.checkpointProvavel}
-        saldoSuficiente={painel.aptoPorSaldo}
-      />
+      <div className="grade-2" style={{ marginTop: 16 }}>
+        <BlocoCheckpoint
+          proximoCheckpoint={painel.proximoCheckpoint}
+          projetadoNoCheckpoint={painel.projetadoNoCheckpoint}
+          custoProximaTransicao={painel.custoProximaTransicao}
+          mesesAtePromocao={painel.mesesAtePromocao}
+          checkpointProvavel={painel.checkpointProvavel}
+          saldoSuficiente={painel.aptoPorSaldo}
+        />
+        <RankingMes mes={mes} podio={podio} minhaPosicao={minhaPosicao} />
+      </div>
 
       {/* Histórico */}
-      <Card style={{ marginTop: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
-          <div className="rotulo">Histórico mensal de coins</div>
-          <div style={{ display: "flex", gap: 14, fontSize: 11, color: "var(--texto-suave)" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 10, height: 10, background: "var(--acento)", display: "inline-block" }} />
+      <Card style={{ marginTop: 16 }}>
+        <div className="coins-cab">
+          <div className="card-t" style={{ marginTop: 0 }}>
+            Histórico mensal de coins
+          </div>
+          <div className="legenda">
+            <span>
+              <i style={{ ["--c" as string]: "var(--ink)" }} />
               Base recorrente
             </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ width: 10, height: 10, background: "var(--trilha-verde-profundo)", display: "inline-block" }} />
+            <span>
+              <i style={{ ["--c" as string]: "var(--accent)" }} />
               Bônus
             </span>
           </div>
         </div>
 
         {historico.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 14 }}>
-            Nenhum mês fechado ainda. Registre a primeira apuração em &quot;Lançar mês&quot; e feche-a.
+          <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>
+            Nenhum mês fechado ainda. Registre a primeira apuração em Lançar mês e feche-a.
           </p>
         ) : (
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 14 }}>
             <GraficoHistorico historico={historico} />
           </div>
         )}
       </Card>
 
       {/* Detalhamento do mês */}
-      <div
-        style={{
-          marginTop: 26,
-          borderTop: "1px solid var(--borda)",
-          paddingTop: 18,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <h3 style={{ fontSize: 17, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="coins-cab" style={{ marginTop: 48 }}>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
           Detalhamento do mês
-          {detalheMes.status === "sem-apuracao" && (
-            <span style={{ color: "var(--acento)", fontSize: 13, fontWeight: 400 }}>sem lançamento</span>
-          )}
-        </h3>
+          {detalheMes.status === "sem-apuracao" && <span className="chip chip-acento">sem lançamento</span>}
+        </h2>
         <SeletorMes meses={meses} mesAtual={mes} rotulo="Mês" />
       </div>
 
       <section
-        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginTop: 12 }}
+        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16, marginTop: 18 }}
       >
         <Card>
           <div className="rotulo">Base recorrente do mês</div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
-            <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: "-0.02em" }}>{fmt(recorrenteMes)}</span>
-            <span style={{ color: "var(--texto-suave)", fontSize: 14 }}>/ {fmt(BASE_MENSAL)}</span>
+          <div className="resumo-num">
+            {fmt(recorrenteMes)}
+            <span style={{ fontSize: 14, color: "var(--muted)", letterSpacing: 0, marginLeft: 6 }}>
+              de {fmt(BASE_MENSAL)}
+            </span>
           </div>
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: 14 }}>
             <Barra pct={pctBaseMes} />
           </div>
-          <div style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 6 }}>
+          <div className="resumo-nota" style={{ marginTop: 8 }}>
             {recorrenteMes >= BASE_MENSAL
               ? "Base mensal completa."
               : `Faltam ${fmt(BASE_MENSAL - recorrenteMes)} coins (${Math.round(100 - pctBaseMes)}%) para a base cheia.`}
           </div>
           {bonusMes > 0 && (
-            <div style={{ fontSize: 12, color: "var(--acento)", marginTop: 4 }}>
+            <div className="resumo-nota" style={{ color: "var(--accent-ink)" }}>
               +{fmt(bonusMes)} em bônus, fora do teto.
             </div>
           )}
 
           {detalheMes.foiReaberta && (
-            <div className="aviso aviso-atencao" style={{ marginTop: 12, fontSize: 12 }}>
+            <div className="aviso aviso-atencao" style={{ marginTop: 14, fontSize: 12 }}>
               Este mês foi reaberto e ajustado pela diretoria depois do fechamento original (§9).
             </div>
           )}
 
           {requisitoDescricao && (
-            <div style={{ marginTop: 16, borderTop: "1px solid var(--borda)", paddingTop: 14 }}>
+            <div style={{ marginTop: 18, borderTop: "1px solid var(--line-soft)", paddingTop: 16 }}>
               <div className="rotulo">Requisito além do saldo</div>
               <div style={{ marginTop: 10 }}>
                 <RequisitoMacroToggle
@@ -264,7 +237,7 @@ export default async function AssessorPage({
         </Card>
 
         <Card style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ overflowX: "auto" }}>
+          <div className="rolagem-x">
             <table className="tabela">
               <thead>
                 <tr>
@@ -279,20 +252,12 @@ export default async function AssessorPage({
                   return (
                     <tr key={m.codigo}>
                       <td>
-                        <span style={{ opacity: 0.5 }}>{m.codigo}</span> {m.nome}
+                        <span className="muted">{m.codigo}</span> {m.nome}
                       </td>
-                      <td>
-                        {d?.valor === undefined
-                          ? "—"
-                          : m.tipo === "percentual"
-                            ? `${d.valor}%`
-                            : d.valor}
-                      </td>
-                      <td style={{ textAlign: "right", fontWeight: 600 }}>
+                      <td>{d?.valor === undefined ? "—" : m.tipo === "percentual" ? `${d.valor}%` : d.valor}</td>
+                      <td style={{ textAlign: "right", fontWeight: 500 }}>
                         {d?.coins ? `+${fmt(d.coins)}` : "0"}
-                        {m.teto && (
-                          <span style={{ color: "var(--texto-suave)", fontWeight: 400 }}> / {fmt(m.teto)}</span>
-                        )}
+                        {m.teto && <span className="muted" style={{ fontWeight: 400 }}> / {fmt(m.teto)}</span>}
                       </td>
                     </tr>
                   );
@@ -302,8 +267,6 @@ export default async function AssessorPage({
           </div>
         </Card>
       </section>
-
-      <RankingMes mes={mes} podio={podio} minhaPosicao={minhaPosicao} />
     </>
   );
 }

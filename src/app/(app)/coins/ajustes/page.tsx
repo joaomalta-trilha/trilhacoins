@@ -14,7 +14,7 @@ export default async function AjustesPage() {
     listarUsuarios(),
     listarLog(),
   ]);
-  const pendentes = usuarios.filter((u) => !u.ativo).length;
+  const pendentes = usuarios.filter((u) => !u.ativo && !u.removidoEm).length;
 
   return (
     <>
@@ -32,7 +32,7 @@ export default async function AjustesPage() {
         .
       </div>
 
-      <h3 style={{ fontSize: 16, marginBottom: 8 }}>Assessores</h3>
+      <h2 className="coins-h2">Assessores</h2>
       <AjustesAssessores
         assessores={assessores.map((a) => ({
           id: a.id,
@@ -43,17 +43,17 @@ export default async function AjustesPage() {
         }))}
       />
 
-      <div style={{ marginTop: 28 }}>
-        <Card style={{ maxWidth: 340 }}>
-          <div className="rotulo">Exportação</div>
-          <p style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 8, marginBottom: 12 }}>
+      <div style={{ marginTop: 16 }}>
+        <Card style={{ maxWidth: 380 }}>
+          <div className="card-t" style={{ marginTop: 0 }}>Exportação</div>
+          <p style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 6, marginBottom: 14 }}>
             Baixa assessores, apurações, lançamentos e promoções em um único JSON.
           </p>
           <ExportarJSON />
         </Card>
       </div>
 
-      <h3 style={{ fontSize: 16, marginTop: 28, marginBottom: 8 }}>Histórico de promoções</h3>
+      <h2 className="coins-h2">Histórico de promoções</h2>
       <Card style={{ padding: 0, overflow: "hidden" }}>
         {promocoes.length === 0 ? (
           <p style={{ fontSize: 13, color: "var(--texto-suave)", padding: 18 }}>
@@ -76,7 +76,7 @@ export default async function AjustesPage() {
                   <tr key={p.id}>
                     <td>{p.assessorNome}</td>
                     <td style={{ color: "var(--texto-suave)" }}>{p.deNivel}</td>
-                    <td style={{ fontWeight: 600 }}>{p.paraNivel}</td>
+                    <td style={{ fontWeight: 500 }}>{p.paraNivel}</td>
                     <td style={{ textAlign: "right" }}>{fmt(p.custo)}</td>
                     <td>{rotuloMes(p.checkpoint)}</td>
                   </tr>
@@ -87,8 +87,8 @@ export default async function AjustesPage() {
         )}
       </Card>
 
-      <h3 style={{ fontSize: 16, marginTop: 28, marginBottom: 8 }}>Log</h3>
-      <p style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: -4, marginBottom: 8 }}>
+      <h2 className="coins-h2">Log</h2>
+      <p style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: -6, marginBottom: 14 }}>
         Tudo que altera saldo ou permissão (§4). Mostrando os 50 mais recentes.
       </p>
       <AjustesLog entradas={log} />

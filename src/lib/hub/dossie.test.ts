@@ -201,6 +201,11 @@ describe("resumoDoItem", () => {
   it("usa o rótulo antes dos dois-pontos", () => {
     expect(resumoDoItem("Check-in: tópico na task de check-in")).toBe("Check-in");
   });
+  it("usa rótulos de até 60 caracteres antes dos dois-pontos", () => {
+    expect(resumoDoItem("Feedback comercial pela planilha de acompanhamento: contatos da semana")).toBe(
+      "Feedback comercial pela planilha de acompanhamento"
+    );
+  });
   it("usa a primeira frase curta", () => {
     expect(resumoDoItem("Referências de conteúdo para os produtos. Confirmar antes.")).toBe(
       "Referências de conteúdo para os produtos"

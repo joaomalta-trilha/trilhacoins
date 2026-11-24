@@ -63,6 +63,8 @@ export interface UsuarioRow {
   nome: string | null;
   cargo: string | null;
   clickupUserId: number | null;
+  /** removido com histórico (migration 0008): fica fora da lista principal */
+  removidoEm: string | null;
 }
 
 export interface LogRow {

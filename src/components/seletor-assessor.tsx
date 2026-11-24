@@ -19,10 +19,11 @@ export function SeletorAssessor({
 
   return (
     <select
-      className="input"
+      className="input pill-select"
       value={selecionadoId}
       onChange={onChange}
-      style={{ fontSize: 15, padding: "8px 10px" }}
+      aria-label="Assessor"
+      style={{ fontSize: 15, height: 44, paddingLeft: 20 }}
     >
       {assessores.map((a) => (
         <option key={a.id} value={a.id}>

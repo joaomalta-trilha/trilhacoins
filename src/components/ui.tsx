@@ -61,20 +61,10 @@ export function Resumo({
   destaque?: boolean;
 }) {
   return (
-    <Card style={{ padding: 16 }}>
+    <Card>
       <Rotulo>{titulo}</Rotulo>
-      <div
-        style={{
-          fontSize: 30,
-          fontWeight: 700,
-          color: destaque ? "var(--acento)" : "var(--texto-forte)",
-          marginTop: 6,
-          letterSpacing: "-0.02em",
-        }}
-      >
-        {valor}
-      </div>
-      <div style={{ fontSize: 12, color: "var(--texto-suave)", marginTop: 2 }}>{nota}</div>
+      <div className={`resumo-num${destaque ? " destaque" : ""}`}>{valor}</div>
+      <div className="resumo-nota">{nota}</div>
     </Card>
   );
 }

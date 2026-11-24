@@ -808,6 +808,7 @@ interface UsuarioRowDB {
   nome?: string | null;
   cargo?: string | null;
   clickup_user_id?: number | null;
+  removido_em?: string | null;
 }
 
 export async function listarUsuarios(): Promise<UsuarioRow[]> {
@@ -832,6 +833,7 @@ export async function listarUsuarios(): Promise<UsuarioRow[]> {
       nome: u.nome ?? null,
       cargo: u.cargo ?? null,
       clickupUserId: u.clickup_user_id ?? null,
+      removidoEm: u.removido_em ?? null,
     }))
     // pendentes de aprovação primeiro — é o que a diretoria precisa ver de cara
     .sort((a, b) => Number(a.ativo) - Number(b.ativo) || a.email.localeCompare(b.email));

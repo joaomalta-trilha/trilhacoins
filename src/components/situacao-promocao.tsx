@@ -25,13 +25,13 @@ export function SituacaoPromocao({
   const [pending, startTransition] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
 
-  if (custoProximaTransicao === null) return <Tag texto="Partner" cor="var(--trilha-verde-grafite)" />;
-  if (!aptoPorSaldo) return <Tag texto="Acumulando" cor="var(--texto-suave)" />;
+  if (custoProximaTransicao === null) return <Tag texto="Partner" cor="var(--ink-2)" />;
+  if (!aptoPorSaldo) return <Tag texto="Acumulando" cor="var(--muted)" />;
 
   if (!aptoParaPromover) {
     return (
       <div>
-        <Tag texto="Saldo ok, com pendência" cor="var(--acento)" />
+        <Tag texto="Saldo ok, com pendência" cor="var(--wait-ink)" />
         {requisitoMacro && (
           <div style={{ fontSize: 11, color: "var(--texto-suave)", marginTop: 4 }}>{requisitoMacro}</div>
         )}
@@ -41,7 +41,7 @@ export function SituacaoPromocao({
 
   return (
     <div>
-      <Tag texto="Apto a promover" cor="var(--trilha-verde-profundo)" />
+      <Tag texto="Apto a promover" cor="var(--ok-ink)" />
       {ehCheckpointAgora ? (
         <button
           type="button"
@@ -54,7 +54,7 @@ export function SituacaoPromocao({
             });
           }}
           className="btn-link"
-          style={{ display: "block", marginTop: 4, fontWeight: 600, color: "var(--acento)" }}
+          style={{ display: "block", marginTop: 6, fontWeight: 500, color: "var(--accent-ink)" }}
         >
           {pending ? "Efetivando…" : "Efetivar promoção"}
         </button>
@@ -63,7 +63,7 @@ export function SituacaoPromocao({
           efetiva em {rotuloMes(proximoCheckpointReal)}
         </div>
       )}
-      {erro && <div style={{ fontSize: 11, color: "#c93d18", marginTop: 4 }}>{erro}</div>}
+      {erro && <div className="erro-inline">{erro}</div>}
     </div>
   );
 }

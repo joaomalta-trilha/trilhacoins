@@ -83,7 +83,10 @@ uma linha em `usuarios` automaticamente (inativa, papel `assessor`
 por padrão) no primeiro login de qualquer pessoa, via trigger em
 `auth.users`. A diretoria aprova — define papel, vincula ao assessor
 correspondente se for o caso, marca ativo — na seção "Usuários" de
-Gestão → Usuários (`src/app/(app)/gestao/usuarios/`, componente `src/components/ajustes-usuarios.tsx`). Continua valendo o
+Gestão → Usuários (`src/app/(app)/gestao/usuarios/`, componente `src/components/ajustes-usuarios.tsx`).
+Remover usuário é a função `remover_usuario()` (migration 0008): sem
+histórico apaga o login de vez; com histórico no Coins/log só arquiva
+(`usuarios.removido_em`), e `restaurar_usuario()` desfaz. Continua valendo o
 "quem loga sem cadastro aprovado não entra em nada" do §4.
 
 **Carteira de coordenação** (não é uma das etapas do §11, extensão do

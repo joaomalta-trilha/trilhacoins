@@ -1,8 +1,6 @@
 import type { PosicaoRanking } from "@/lib/trilhacoins";
 import { Card, fmtPct, rotuloMes } from "./ui";
 
-const MEDALHA = ["🥇", "🥈", "🥉"];
-
 /**
  * Ranking do mês (§7): pódio nomeado (top 3) + a posição de quem está
  * vendo a página — nunca a lista inteira. Vale pra qualquer papel.
@@ -19,39 +17,35 @@ export function RankingMes({
   const noPodio = minhaPosicao?.nomeado ?? false;
 
   return (
-    <Card style={{ marginTop: 12 }}>
-      <div className="rotulo">Ranking de {rotuloMes(mes)} · % da base recorrente</div>
+    <Card>
+      <div className="card-t" style={{ marginTop: 0 }}>
+        Ranking de {rotuloMes(mes)}
+        <small>Percentual da base recorrente batido no mês</small>
+      </div>
 
       {podio.length === 0 ? (
-        <p style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 10 }}>
+        <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
           Nenhum lançamento nesse mês ainda.
         </p>
       ) : (
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 12 }}>
+        <div className="podio">
           {podio.map((p) => (
-            <div key={p.assessorId} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 20 }}>{MEDALHA[p.posicao - 1]}</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{p.nome}</div>
-                <div style={{ fontSize: 12, color: "var(--texto-suave)" }}>{fmtPct(p.pctBase)}%</div>
-              </div>
+            <div key={p.assessorId} className="podio-item">
+              <span className="podio-pos">{p.posicao}º</span>
+              <span>
+                <b>{p.nome}</b>
+                <span>{fmtPct(p.pctBase)}% da base</span>
+              </span>
             </div>
           ))}
         </div>
       )}
 
       {minhaPosicao && !noPodio && (
-        <div
-          style={{
-            marginTop: 14,
-            paddingTop: 14,
-            borderTop: "1px solid var(--borda)",
-            fontSize: 13,
-          }}
-        >
+        <p style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line-soft)", fontSize: 13 }}>
           {minhaPosicao.nome} está em <strong>{minhaPosicao.posicao}º lugar</strong> este mês, com{" "}
           {fmtPct(minhaPosicao.pctBase)}% da base.
-        </div>
+        </p>
       )}
     </Card>
   );

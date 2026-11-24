@@ -26,9 +26,9 @@ export function SeletorMes({
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <label style={{ fontSize: 12, color: "var(--texto-suave)" }}>{rotulo}</label>
-      <select className="input" value={mesAtual} onChange={onChange} style={{ width: 150 }}>
+    <label className="select-pill">
+      <span>{rotulo}</span>
+      <select className="input pill-select" value={mesAtual} onChange={onChange}>
         {meses.map((m) => (
           <option key={m} value={m}>
             {rotuloMes(m)}
@@ -36,6 +36,6 @@ export function SeletorMes({
           </option>
         ))}
       </select>
-    </div>
+    </label>
   );
 }

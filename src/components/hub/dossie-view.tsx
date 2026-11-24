@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
-import { ExternalLink } from "lucide-react";
+import { ArrowUpRight, BarChart3, Filter, MessageSquare, PlayCircle, TrendingUp, type LucideIcon } from "lucide-react";
 import type { ClienteRow } from "@/lib/data/hub";
 import {
   DIAS_UTEIS,
   type DiaUtil,
+  type Dossie,
   atalhosDoDossie,
   campo,
-  lerDossie,
   lerRotina,
   lerSwot,
   notasDeAcesso,
@@ -17,14 +17,14 @@ import {
 } from "@/lib/hub/dossie";
 import { Md, MdInline } from "./markdown";
 
-// Dossiê do cliente no mesmo desenho da Trilha do Assessor: o essencial
-// em 30 segundos, os atalhos de trabalho, a rotina em calendário, os
-// cuidados, a SWOT e a leitura da conta.
+// Dossiê do cliente em três partes, para a página poder pôr a rotina na
+// faixa escura: o essencial e os acessos (claro), a rotina da semana
+// (escuro) e a leitura da conta (claro).
 
 const NOMES_DIA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
 /** Dia útil de hoje no fuso de Maceió (o servidor roda em UTC). */
-function diaUtilDeHoje(): DiaUtil | null {
+export function diaUtilDeHoje(): DiaUtil | null {
   const nome = new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: "America/Maceio" })
     .format(new Date())
     .split("-")[0]
@@ -33,11 +33,11 @@ function diaUtilDeHoje(): DiaUtil | null {
   return i >= 1 && i <= 5 ? DIAS_UTEIS[i - 1] : null;
 }
 
-function ParesChaveValor({ pares }: { pares: [string, string][] }) {
+function ParesChaveValor({ pares, duas }: { pares: [string, string][]; duas?: boolean }) {
   const visiveis = pares.filter(([, v]) => v && v.trim());
   if (!visiveis.length) return <p className="muted">Ainda não preenchido.</p>;
   return (
-    <dl className="kv">
+    <dl className={`kv${duas ? " duas" : ""}`}>
       {visiveis.map(([k, v]) => (
         <div key={k}>
           <dt>{k}</dt>
@@ -50,112 +50,136 @@ function ParesChaveValor({ pares }: { pares: [string, string][] }) {
   );
 }
 
-function Bloco({ titulo, tom, children }: { titulo?: string; tom?: "areia" | "laranja" | "verde"; children: ReactNode }) {
+function Bloco({ titulo, children }: { titulo?: string; children: ReactNode }) {
   return (
-    <section className={`card bloco${tom ? ` tom-${tom}` : ""}`}>
+    <section className="card bloco">
       {titulo && <h3>{titulo}</h3>}
       {children}
     </section>
   );
 }
 
-const ROTULOS_LINK: [keyof ClienteRow["links"], string][] = [
-  ["relatorio", "📊 Relatório da semana"],
-  ["funil", "🔻 Funil de vendas do site"],
-  ["otimizacao", "📈 Otimização da semana"],
-  ["checkin", "▶️ Check-in do assessor"],
-  ["recorrencia", "💬 Mensagens em Feedback"],
+const LINKS_ROTINA: [keyof ClienteRow["links"], string, LucideIcon][] = [
+  ["relatorio", "Relatório da semana", BarChart3],
+  ["funil", "Funil de vendas do site", Filter],
+  ["otimizacao", "Otimização da semana", TrendingUp],
+  ["checkin", "Check-in do assessor", PlayCircle],
+  ["recorrencia", "Mensagens em Feedback", MessageSquare],
 ];
 
-export function DossieView({ cliente, md }: { cliente: ClienteRow; md: string }) {
-  const d = lerDossie(md);
+/** Quais partes existem neste dossiê (para as pílulas de navegação). */
+export function partesDoDossie(d: Dossie): { id: string; rotulo: string }[] {
+  const partes = [
+    { id: "resumo", rotulo: "Em 30 segundos" },
+    { id: "acessos", rotulo: "Acessos" },
+    { id: "rotina", rotulo: "Rotina" },
+  ];
+  if (secao(d, "Cuidados")) partes.push({ id: "cuidados", rotulo: "Cuidados" });
+  else if (secao(d, "Resposta específica")) partes.push({ id: "cuidados", rotulo: "Contexto" });
+  partes.push({ id: "swot", rotulo: "SWOT" });
+  if (secoesDaConta(d).length || secao(d, "Histórico de decisões")) partes.push({ id: "conta", rotulo: "Na conta" });
+  return partes;
+}
+
+/** O essencial em 30 segundos e as ferramentas de trabalho. */
+export function DossieEssencial({ d, md }: { d: Dossie; md: string }) {
   const desafio = textoDaSecao(secao(d, "Desafio"));
   const atalhos = atalhosDoDossie(d, md);
   const notas = notasDeAcesso(d);
-  const rotina = lerRotina(d);
-  const swot = lerSwot(d);
-  const hoje = diaUtilDeHoje();
-  const cuidados = secao(d, "Cuidados");
-  const contexto = secao(d, "Resposta específica");
-  const conta = secoesDaConta(d);
-  const historico = secao(d, "Histórico de decisões");
-  const linksRotina = ROTULOS_LINK.filter(([k]) => cliente.links[k]);
+  const intro = d.intro.filter((l) => !l.startsWith("**Pede"));
 
   return (
-    <div className="dossie">
-      {d.intro
-        .filter((l) => !l.startsWith("**Pede"))
-        .map((l, i) => (
-          <p key={i} className="nota">
+    <>
+      <section className="dossie-secao" id="resumo" aria-labelledby="t-resumo">
+        <h2 id="t-resumo">Em 30 segundos</h2>
+        {intro.map((l, i) => (
+          <p key={i} className="nota" style={{ marginBottom: 12 }}>
             <MdInline texto={l} />
           </p>
         ))}
+        <div className="card">
+          <ParesChaveValor
+            duas
+            pares={[
+              ["Objetivo", campo(d, "Objetivo")],
+              ["Meta", campo(d, "Meta")],
+              ["Contato e quem decide", campo(d, "Contato")],
+              ["Maior desafio", desafio],
+              ["Produtos em campanha", campo(d, "Produtos")],
+            ]}
+          />
+        </div>
+      </section>
 
-      <Bloco titulo="Em 30 segundos">
-        <ParesChaveValor
-          pares={[
-            ["Objetivo", campo(d, "Objetivo")],
-            ["Meta", campo(d, "Meta")],
-            ["Contato e quem decide", campo(d, "Contato")],
-            ["Maior desafio", desafio],
-            ["Produtos em campanha", campo(d, "Produtos")],
-          ]}
-        />
-      </Bloco>
-
-      {atalhos.length > 0 && (
-        <>
-          <h2>Ferramentas e acessos</h2>
-          <div className="atalhos">
+      <section className="dossie-secao" id="acessos" aria-labelledby="t-acessos">
+        <h2 id="t-acessos">Ferramentas e acessos</h2>
+        {atalhos.length > 0 && (
+          <div className="atalhos" style={{ marginBottom: 16 }}>
             {atalhos.map((a) => (
               <a key={a.url} className="atalho" href={a.url} target="_blank" rel="noopener noreferrer">
-                <span className="atalho-sigla" aria-hidden="true">
+                <span className="ic" aria-hidden="true">
                   {a.sigla}
                 </span>
                 <span className="atalho-texto">
                   <b>{a.nome}</b>
                   <span>{a.descricao}</span>
                 </span>
-                <ExternalLink size={14} strokeWidth={1.6} aria-hidden="true" />
+                <ArrowUpRight strokeWidth={1.8} aria-hidden="true" />
               </a>
             ))}
           </div>
-        </>
-      )}
+        )}
+        <div className="grade-2">
+          <Bloco titulo="Contas e sistemas">
+            <ParesChaveValor
+              pares={[
+                ["Canais", campo(d, "Canais")],
+                ["Contas", campo(d, "Contas")],
+                ["Conta Meta", campo(d, "Conta Meta")],
+                ["CRM", campo(d, "CRM")],
+                ["Eventos no Meta", campo(d, "Funil")],
+                ...notas.map((n): [string, string] => {
+                  const k = n.split(":")[0];
+                  return k.length < 30 && n.includes(":") ? [k, n.slice(k.length + 1).trim()] : ["Acesso", n];
+                }),
+              ]}
+            />
+          </Bloco>
+          <Bloco titulo="Verba e pagamento">
+            <ParesChaveValor
+              pares={[
+                ["Meta", campo(d, "Verba mensal no Meta")],
+                ["Google", campo(d, "Verba mensal no Google")],
+                ["Pagamento", campo(d, "Pagamento")],
+              ]}
+            />
+          </Bloco>
+        </div>
+        <p className="nota-rodape" style={{ marginTop: 12 }}>
+          Senhas não ficam no Hub. Sem acesso a alguma ferramenta? Peça à coordenação.
+        </p>
+      </section>
+    </>
+  );
+}
 
-      <div className="grade-2">
-        <Bloco titulo="Contas e sistemas" tom="areia">
-          <ParesChaveValor
-            pares={[
-              ["Canais", campo(d, "Canais")],
-              ["Contas", campo(d, "Contas")],
-              ["Conta Meta", campo(d, "Conta Meta")],
-              ["CRM", campo(d, "CRM")],
-              ["Eventos no Meta", campo(d, "Funil")],
-              ...notas.map((n): [string, string] => {
-                const k = n.split(":")[0];
-                return k.length < 30 && n.includes(":") ? [k, n.slice(k.length + 1).trim()] : ["Acesso", n];
-              }),
-            ]}
-          />
-        </Bloco>
-        <Bloco titulo="Verba e pagamento" tom="areia">
-          <ParesChaveValor
-            pares={[
-              ["Meta", campo(d, "Verba mensal no Meta")],
-              ["Google", campo(d, "Verba mensal no Google")],
-              ["Pagamento", campo(d, "Pagamento")],
-            ]}
-          />
-        </Bloco>
+/** A rotina da semana em cinco colunas (vai dentro da faixa escura). */
+export function DossieRotina({ d, cliente }: { d: Dossie; cliente: ClienteRow }) {
+  const rotina = lerRotina(d);
+  const hoje = diaUtilDeHoje();
+  const links = LINKS_ROTINA.filter(([k]) => cliente.links[k]);
+
+  return (
+    <section id="rotina" className="dossie-secao" style={{ marginTop: 0 }} aria-labelledby="t-rotina">
+      <div className="secao-cab">
+        <h2 id="t-rotina">Rotina da semana</h2>
+        {hoje && <span className="cnt">hoje é {hoje.toLowerCase()}</span>}
       </div>
-      <p className="muted pequeno">Senhas não ficam no Hub. Sem acesso a alguma ferramenta? Peça à coordenação.</p>
-
-      <h2>Rotina do cliente</h2>
-      {linksRotina.length > 0 && (
+      {links.length > 0 && (
         <div className="links-rotina">
-          {linksRotina.map(([k, rotulo]) => (
+          {links.map(([k, rotulo, Icone]) => (
             <a key={k} href={cliente.links[k]} target="_blank" rel="noopener noreferrer" className="link-tarefa">
+              <Icone strokeWidth={1.6} aria-hidden="true" />
               {rotulo}
             </a>
           ))}
@@ -163,37 +187,47 @@ export function DossieView({ cliente, md }: { cliente: ClienteRow; md: string })
       )}
       {rotina ? (
         <>
-          {rotina.intro.length > 0 && <Md texto={rotina.intro.join("\n")} className="muted" />}
+          {rotina.intro.length > 0 && (
+            <div style={{ marginBottom: 18, maxWidth: "80ch" }}>
+              <Md texto={rotina.intro.join("\n")} />
+            </div>
+          )}
           <div className="calendario">
-            {DIAS_UTEIS.map((dia) => (
-              <details key={dia} className={`dia${hoje === dia ? " hoje" : ""}`} open={hoje === dia}>
-                <summary>
-                  <span className="dia-nome">{dia}</span>
-                  {hoje === dia && <span className="dia-hoje">hoje</span>}
-                  <ul className="dia-resumo">
-                    {rotina.dias[dia].length ? (
-                      rotina.dias[dia].map((t, i) => <li key={i}>{resumoDoItem(t)}</li>)
-                    ) : (
-                      <li className="muted">Sem rito neste dia.</li>
-                    )}
-                  </ul>
-                </summary>
-                {rotina.dias[dia].length > 0 && (
-                  <ul className="dia-completo">
-                    {rotina.dias[dia].map((t, i) => (
-                      <li key={i}>
-                        <MdInline texto={t} />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </details>
-            ))}
+            {DIAS_UTEIS.map((dia) => {
+              const itens = rotina.dias[dia];
+              return (
+                <details key={dia} className={`dia${hoje === dia ? " hoje" : ""}`} open={hoje === dia}>
+                  <summary>
+                    <span className="dia-cab">
+                      <span className="dia-nome">{dia}</span>
+                      {hoje === dia && <span className="dia-hoje">hoje</span>}
+                    </span>
+                    <ul className="dia-resumo">
+                      {itens.length ? (
+                        itens.map((t, i) => <li key={i}>{resumoDoItem(t)}</li>)
+                      ) : (
+                        <li className="muted">Sem rito neste dia.</li>
+                      )}
+                    </ul>
+                    {itens.length > 0 && <span className="dia-mais">ver o detalhe</span>}
+                  </summary>
+                  {itens.length > 0 && (
+                    <ul className="dia-completo">
+                      {itens.map((t, i) => (
+                        <li key={i}>
+                          <MdInline texto={t} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </details>
+              );
+            })}
           </div>
           {rotina.extras.length > 0 && (
-            <div className="grade-2">
-              {rotina.extras.map((x, i) => (
-                <details key={x.titulo} className={`card dobra tom-${i % 2 ? "laranja" : "verde"}`}>
+            <div className="grade-2 extras">
+              {rotina.extras.map((x) => (
+                <details key={x.titulo} className="painel dobra">
                   <summary>{x.titulo}</summary>
                   <Md texto={x.linhas.join("\n")} />
                 </details>
@@ -201,77 +235,107 @@ export function DossieView({ cliente, md }: { cliente: ClienteRow; md: string })
             </div>
           )}
           {rotina.observacoes.length > 0 && (
-            <div className="chips">
-              {rotina.observacoes.flatMap((t) => t.split(" · ")).map((t) => (
-                <span key={t} className="chip">
-                  {t}
-                </span>
-              ))}
+            <div className="chips observacoes">
+              {rotina.observacoes
+                .flatMap((t) => t.split(" · "))
+                .map((t) => (
+                  <span key={t} className="chip">
+                    {t}
+                  </span>
+                ))}
             </div>
           )}
         </>
       ) : (
-        <Bloco>
-          <p className="muted">Rotina ainda não escrita.</p>
-        </Bloco>
+        <p className="vazio-escuro">A rotina deste cliente ainda não foi escrita no dossiê.</p>
       )}
+    </section>
+  );
+}
 
-      {cuidados && (
-        <Bloco titulo="Cuidados" tom="laranja">
-          <Md texto={textoDaSecao(cuidados)} />
-        </Bloco>
-      )}
-      {contexto && (
-        <Bloco titulo="Contexto">
-          <Md texto={textoDaSecao(contexto)} />
-        </Bloco>
-      )}
+/** Cuidados, contexto, SWOT e a leitura da conta. */
+export function DossieAnalise({ d }: { d: Dossie }) {
+  const swot = lerSwot(d);
+  const cuidados = secao(d, "Cuidados");
+  const contexto = secao(d, "Resposta específica");
+  const conta = secoesDaConta(d);
+  const historico = secao(d, "Histórico de decisões");
 
-      <h2>Análise SWOT</h2>
-      {swot ? (
-        <>
-          {swot.notas.length > 0 && <Md texto={swot.notas.join("\n\n")} className="muted pequeno" />}
-          <div className="swot">
-            {(
-              [
-                ["Forças", swot.forcas, "forcas"],
-                ["Fraquezas", swot.fraquezas, "fraquezas"],
-                ["Oportunidades", swot.oportunidades, "oportunidades"],
-                ["Ameaças", swot.ameacas, "ameacas"],
-              ] as const
-            ).map(([titulo, linhas, cls]) => (
-              <div key={titulo} className={`swot-q ${cls}`}>
-                <h3>{titulo}</h3>
-                <Md texto={linhas.length ? linhas.join("\n") : "Ainda não escrito."} />
-              </div>
-            ))}
+  return (
+    <>
+      {(cuidados || contexto) && (
+        <section className="dossie-secao" id="cuidados" aria-labelledby="t-cuidados">
+          <h2 id="t-cuidados">{cuidados ? "Cuidados" : "Contexto"}</h2>
+          <div className={cuidados && contexto ? "grade-2" : undefined}>
+            {cuidados && (
+              <Bloco>
+                <Md texto={textoDaSecao(cuidados)} />
+              </Bloco>
+            )}
+            {contexto && (
+              <Bloco titulo="Contexto">
+                <Md texto={textoDaSecao(contexto)} />
+              </Bloco>
+            )}
           </div>
-          {swot.fontes.length > 0 && <Md texto={swot.fontes.join("\n\n")} className="muted pequeno" />}
-        </>
-      ) : (
-        <Bloco tom="areia">
-          <p className="muted">A análise SWOT desse cliente ainda vai ser escrita e validada pela coordenação.</p>
-        </Bloco>
+        </section>
       )}
 
-      {conta.length > 0 && (
-        <>
-          <h2>Na conta</h2>
+      <section className="dossie-secao" id="swot" aria-labelledby="t-swot">
+        <h2 id="t-swot">Análise SWOT</h2>
+        {swot ? (
+          <>
+            {swot.notas.length > 0 && (
+              <div className="muted" style={{ marginBottom: 14, maxWidth: "80ch" }}>
+                <Md texto={swot.notas.join("\n\n")} />
+              </div>
+            )}
+            <div className="swot">
+              {(
+                [
+                  ["Forças", swot.forcas, "forcas"],
+                  ["Fraquezas", swot.fraquezas, "fraquezas"],
+                  ["Oportunidades", swot.oportunidades, "oportunidades"],
+                  ["Ameaças", swot.ameacas, "ameacas"],
+                ] as const
+              ).map(([titulo, linhas, cls]) => (
+                <div key={titulo} className={`swot-q ${cls}`}>
+                  <h3>{titulo}</h3>
+                  <Md texto={linhas.length ? linhas.join("\n") : "Ainda não escrito."} />
+                </div>
+              ))}
+            </div>
+            {swot.fontes.length > 0 && (
+              <div className="nota-rodape">
+                <Md texto={swot.fontes.join("\n\n")} />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="vazio">
+            <b>SWOT ainda não escrita</b>
+            <p>A análise desse cliente ainda vai ser escrita e validada pela coordenação.</p>
+          </div>
+        )}
+      </section>
+
+      {(conta.length > 0 || historico) && (
+        <section className="dossie-secao" id="conta" aria-labelledby="t-conta">
+          <h2 id="t-conta">Na conta</h2>
           {conta.map((s) => (
             <details key={s.titulo} className="card dobra">
               <summary>{s.titulo}</summary>
               <Md texto={s.linhas.join("\n")} />
             </details>
           ))}
-        </>
+          {historico && (
+            <details className="card dobra">
+              <summary>Histórico de decisões</summary>
+              <Md texto={textoDaSecao(historico)} />
+            </details>
+          )}
+        </section>
       )}
-
-      {historico && (
-        <details className="card dobra">
-          <summary>Histórico de decisões</summary>
-          <Md texto={textoDaSecao(historico)} />
-        </details>
-      )}
-    </div>
+    </>
   );
 }

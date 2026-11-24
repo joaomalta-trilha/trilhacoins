@@ -19,7 +19,7 @@ interface ErroSupabase {
 /** O banco ainda não recebeu a migration do Hub (tabela ou função ausente). */
 export class MigracaoPendenteError extends Error {
   constructor() {
-    super("O banco ainda não tem as tabelas do Hub. Rode a migration 0007_hub_fundacao.sql no Supabase.");
+    super("O banco ainda não tem a atualização mais recente do Hub. Rode as migrations novas de supabase/migrations no Supabase.");
     this.name = "MigracaoPendenteError";
   }
 }
@@ -160,7 +160,8 @@ export interface DossieRow {
   atualizadoEm: string;
 }
 
-export async function obterClientePorSlug(
+// cache: a página do cliente e o título da aba pedem o mesmo cliente
+export const obterClientePorSlug = cache(async function obterClientePorSlug(
   slug: string
 ): Promise<{ cliente: ClienteRow; dossie: DossieRow | null } | null> {
   const supabase = await createClient();
@@ -184,7 +185,7 @@ export async function obterClientePorSlug(
       }
     : null;
   return { cliente, dossie };
-}
+});
 
 export interface PatchCliente {
   nome?: string;
@@ -391,12 +392,12 @@ export const listarConteudos = cache(async (secao = "trilha"): Promise<ConteudoR
   return ((data ?? []) as ConteudoDB[]).map(paraConteudo);
 });
 
-export async function obterConteudo(slug: string): Promise<ConteudoRow | null> {
+export const obterConteudo = cache(async function obterConteudo(slug: string): Promise<ConteudoRow | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("conteudos").select("*").eq("slug", slug).maybeSingle();
   lancarSeErro(error);
   return data ? paraConteudo(data as ConteudoDB) : null;
-}
+});
 
 export async function salvarConteudo(
   id: string,
@@ -438,4 +439,24 @@ export async function obterDossiesDe(clienteIds: string[]): Promise<Map<string, 
   const { data, error } = await supabase.from("dossies").select("cliente_id, conteudo_md").in("cliente_id", clienteIds);
   lancarSeErro(error);
   return new Map(((data ?? []) as { cliente_id: string; conteudo_md: string }[]).map((d) => [d.cliente_id, d.conteudo_md]));
+}
+
+// ---------------------------------------------------------------
+// remover e restaurar usuários (migration 0008) — a regra (quem pode,
+// apagar de vez ou só arquivar) vive nas funções do banco
+// ---------------------------------------------------------------
+
+export type ModoRemocao = "excluido" | "arquivado";
+
+export async function removerUsuario(usuarioId: string): Promise<ModoRemocao> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("remover_usuario", { usuario_id_alvo: usuarioId });
+  lancarSeErro(error);
+  return data === "arquivado" ? "arquivado" : "excluido";
+}
+
+export async function restaurarUsuario(usuarioId: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("restaurar_usuario", { usuario_id_alvo: usuarioId });
+  lancarSeErro(error);
 }

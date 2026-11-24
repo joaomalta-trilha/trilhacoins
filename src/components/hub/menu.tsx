@@ -29,56 +29,54 @@ const ICONES: Record<IconeNav, LucideIcon> = {
   saude: HeartPulse,
 };
 
+/** Nome curto para a doca do celular, onde cada item tem ~70px. */
+const CURTO: Record<string, string> = {
+  "Minha carteira": "Carteira",
+  "Trilha do Assessor": "Trilha",
+  "Trilha Coins": "Coins",
+  "Visão geral": "Visão geral",
+};
+
 export function IconeDoItem({ icone, tamanho = 18 }: { icone: IconeNav; tamanho?: number }) {
   const Icone = ICONES[icone];
   return <Icone size={tamanho} strokeWidth={1.6} aria-hidden="true" />;
 }
 
-/** Menu lateral (computador). Itens "em breve" aparecem, mas não são link. */
-export function MenuLateral({ itens }: { itens: ItemNav[] }) {
+/**
+ * Seções em pílulas no centro da barra (computador). Módulos "em breve"
+ * não entram aqui: aparecem nas telas, onde explicam o que vem.
+ */
+export function NavPrincipal({ itens }: { itens: ItemNav[] }) {
   const pathname = usePathname();
-  const ativo = itemAtivo(pathname, itens);
-  return (
-    <nav className="hub-nav" aria-label="Menu principal">
-      {itens.map((item) =>
-        item.emBreve ? (
-          <span key={item.href} className="hub-nav-item em-breve" aria-disabled="true" title={`Chega na ${item.emBreve}`}>
-            <IconeDoItem icone={item.icone} />
-            <span>{item.rotulo}</span>
-            <span className="hub-nav-fase">{item.emBreve}</span>
-          </span>
-        ) : (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`hub-nav-item${ativo === item.href ? " ativo" : ""}`}
-            aria-current={ativo === item.href ? "page" : undefined}
-          >
-            <IconeDoItem icone={item.icone} />
-            <span>{item.rotulo}</span>
-          </Link>
-        )
-      )}
-    </nav>
-  );
-}
-
-/** Abas fixas no rodapé (celular): só os módulos que já existem. */
-export function MenuAbas({ itens }: { itens: ItemNav[] }) {
-  const pathname = usePathname();
-  const prontos = itens.filter((i) => !i.emBreve).slice(0, 5);
+  const prontos = itens.filter((i) => !i.emBreve);
   const ativo = itemAtivo(pathname, prontos);
   return (
-    <nav className="hub-abas" aria-label="Menu principal">
+    <nav className="pills nav-principal" aria-label="Menu principal">
       {prontos.map((item) => (
         <Link
           key={item.href}
           href={item.href}
-          className={`hub-aba${ativo === item.href ? " ativo" : ""}`}
+          className="pill"
           aria-current={ativo === item.href ? "page" : undefined}
         >
-          <IconeDoItem icone={item.icone} tamanho={20} />
-          <span>{item.rotulo.replace("Trilha do Assessor", "Trilha").replace("Trilha Coins", "Coins").replace("Minha carteira", "Carteira").replace("Visão geral", "Visão")}</span>
+          {item.rotulo}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+/** Doca flutuante no rodapé (celular). */
+export function Doca({ itens }: { itens: ItemNav[] }) {
+  const pathname = usePathname();
+  const prontos = itens.filter((i) => !i.emBreve).slice(0, 5);
+  const ativo = itemAtivo(pathname, prontos);
+  return (
+    <nav className="doca" aria-label="Menu principal">
+      {prontos.map((item) => (
+        <Link key={item.href} href={item.href} aria-current={ativo === item.href ? "page" : undefined}>
+          <IconeDoItem icone={item.icone} tamanho={19} />
+          <span>{CURTO[item.rotulo] ?? item.rotulo}</span>
         </Link>
       ))}
     </nav>

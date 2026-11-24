@@ -29,11 +29,15 @@ export function LoginButton() {
   }
 
   return (
-    <div>
-      <button type="button" className="btn btn-primario" disabled={pending} onClick={entrar}>
+    <div style={{ width: "100%" }}>
+      <button type="button" className="btn btn-primario" disabled={pending} onClick={entrar} aria-busy={pending || undefined}>
         {pending ? "Redirecionando…" : "Entrar com Google"}
       </button>
-      {erro && <div style={{ fontSize: 12, color: "#c93d18", marginTop: 10 }}>{erro}</div>}
+      {erro && (
+        <div className="erro-inline" role="alert" style={{ marginTop: 10 }}>
+          Não deu para abrir o login do Google: {erro}
+        </div>
+      )}
     </div>
   );
 }

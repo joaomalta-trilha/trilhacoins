@@ -18,11 +18,11 @@ export function NavTabs({ papel }: { papel: Papel }) {
   // Assessor só tem o próprio painel: uma aba sozinha não ajuda em nada.
   if (abasVisiveis.length < 2) return null;
   return (
-    <nav className="nav-tabs">
+    <nav className="nav-tabs" aria-label="Telas do Trilha Coins">
       {abasVisiveis.map((a) => {
         const ativo = pathname === a.href || pathname.startsWith(`${a.href}/`);
         return (
-          <Link key={a.href} href={a.href} className={`nav-tab${ativo ? " ativo" : ""}`}>
+          <Link key={a.href} href={a.href} className={`nav-tab${ativo ? " ativo" : ""}`} aria-current={ativo ? "page" : undefined}>
             {a.nome}
           </Link>
         );

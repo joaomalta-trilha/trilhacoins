@@ -7,17 +7,17 @@ export function AnelProgresso({ pct, apto }: { pct: number; apto: boolean }) {
   const p = Math.max(0, Math.min(100, pct));
   const preenchido = (p / 100) * circunferencia;
   return (
-    <svg width={104} height={104} viewBox="0 0 100 100" style={{ flexShrink: 0 }}>
-      <circle cx={50} cy={50} r={raio} fill="none" stroke="#333833" strokeWidth={8} />
+    <svg width={120} height={120} viewBox="0 0 100 100" style={{ flexShrink: 0 }} role="img" aria-label={`${Math.round(p)}% do caminho`}>
+      <circle cx={50} cy={50} r={raio} fill="none" stroke="#2e2e2b" strokeWidth={6} />
       <circle
         cx={50}
         cy={50}
         r={raio}
         fill="none"
-        stroke={apto ? "var(--trilha-verde-confirmacao)" : "var(--acento)"}
-        strokeWidth={8}
+        stroke={apto ? "var(--ok)" : "var(--accent)"}
+        strokeWidth={6}
         strokeDasharray={`${preenchido} ${circunferencia}`}
-        strokeLinecap="butt"
+        strokeLinecap="round"
         transform="rotate(-90 50 50)"
       />
       <text
@@ -25,9 +25,10 @@ export function AnelProgresso({ pct, apto }: { pct: number; apto: boolean }) {
         y={50}
         textAnchor="middle"
         dominantBaseline="central"
-        fill="#E9E8E4"
-        fontSize={20}
-        fontWeight={700}
+        fill="#ffffff"
+        fontSize={22}
+        fontFamily="var(--fonte)"
+        letterSpacing="-0.5"
       >
         {Math.round(p)}%
       </text>
@@ -35,30 +36,12 @@ export function AnelProgresso({ pct, apto }: { pct: number; apto: boolean }) {
   );
 }
 
-export function MetricaEscura({
-  rotulo,
-  valor,
-  nota,
-}: {
-  rotulo: string;
-  valor: string;
-  nota: string;
-}) {
+export function MetricaEscura({ rotulo, valor, nota }: { rotulo: string; valor: string; nota: string }) {
   return (
-    <div style={{ padding: "14px 18px 14px 0", minWidth: 140 }}>
-      <div
-        style={{
-          fontFamily: "var(--fonte-wide)",
-          fontSize: 10,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "var(--trilha-verde-salvia)",
-        }}
-      >
-        {rotulo}
-      </div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#fff", marginTop: 4 }}>{valor}</div>
-      <div style={{ fontSize: 11, color: "var(--trilha-verde-nevoa)", marginTop: 2 }}>{nota}</div>
+    <div className="metrica-escura">
+      <span>{rotulo}</span>
+      <b>{valor}</b>
+      <small>{nota}</small>
     </div>
   );
 }
@@ -80,33 +63,25 @@ export function GraficoHistorico({
 
   return (
     <svg viewBox={`0 0 ${largura} ${altura + 16}`} width="100%" role="img" aria-label="Histórico mensal de coins">
-      <line
-        x1={margem}
-        y1={yTeto}
-        x2={largura - margem}
-        y2={yTeto}
-        stroke="var(--trilha-verde-nevoa)"
-        strokeDasharray="4 4"
-        strokeWidth={1}
-      />
-      <text x={largura - margem} y={yTeto - 4} textAnchor="end" fontSize={10} fill="var(--texto-suave)">
-        1.300
+      <line x1={margem} y1={yTeto} x2={largura - margem} y2={yTeto} stroke="var(--line)" strokeDasharray="4 4" strokeWidth={1} />
+      <text x={largura - margem} y={yTeto - 5} textAnchor="end" fontSize={10} fill="var(--muted)">
+        base 1.300
       </text>
       {historico.map((h, i) => {
-        const x = margem + i * larguraBarra + larguraBarra * 0.18;
-        const w = larguraBarra * 0.64;
+        const x = margem + i * larguraBarra + larguraBarra * 0.22;
+        const w = larguraBarra * 0.56;
         const hRec = escala(h.coinsRecorrente);
         const hBon = escala(h.coinsBonus);
         return (
           <g key={h.mes}>
-            <rect x={x} y={yBase - hRec} width={w} height={hRec} fill="var(--acento)" />
-            <rect x={x} y={yBase - hRec - hBon} width={w} height={hBon} fill="var(--trilha-verde-profundo)" />
+            <rect x={x} y={yBase - hRec} width={w} height={hRec} rx={3} fill="var(--ink)" />
+            {hBon > 0 && <rect x={x} y={yBase - hRec - hBon - 2} width={w} height={hBon} rx={3} fill="var(--accent)" />}
             <text
               x={x + w / 2}
               y={altura + 12}
               textAnchor="middle"
               fontSize={10}
-              fill={ehCheckpoint(h.mes) ? "var(--acento)" : "var(--texto-suave)"}
+              fill={ehCheckpoint(h.mes) ? "var(--accent-ink)" : "var(--muted)"}
             >
               {rotuloMes(h.mes)}
             </text>
@@ -134,68 +109,43 @@ export function BlocoCheckpoint({
 }) {
   if (custoProximaTransicao === null) {
     return (
-      <div className="card" style={{ marginTop: 12 }}>
-        <div className="rotulo">Checkpoint</div>
-        <p style={{ fontSize: 13, color: "var(--texto-suave)", marginTop: 8 }}>
-          Nível máximo da trilha — não há próxima transição a projetar.
-        </p>
+      <div className="card">
+        <div className="card-t" style={{ marginTop: 0 }}>
+          Checkpoint
+          <small>Nível máximo da trilha: não há próxima transição a projetar.</small>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
+    <div className="card">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
         <div>
           <div className="rotulo">Próximo checkpoint</div>
-          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4 }}>{rotuloMes(proximoCheckpoint)}</div>
+          <div className="resumo-num">{rotuloMes(proximoCheckpoint)}</div>
         </div>
         <div>
           <div className="rotulo">Projeção a 100% no checkpoint</div>
-          <div style={{ fontSize: 20, fontWeight: 700, marginTop: 4 }}>
-            {fmt(projetadoNoCheckpoint)}{" "}
-            <span style={{ fontSize: 13, color: "var(--texto-suave)", fontWeight: 400 }}>
-              / {fmt(custoProximaTransicao)}
+          <div className="resumo-num">
+            {fmt(projetadoNoCheckpoint)}
+            <span style={{ fontSize: 13, color: "var(--muted)", letterSpacing: 0, marginLeft: 6 }}>
+              de {fmt(custoProximaTransicao)}
             </span>
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: 16,
-          padding: "14px 16px",
-          borderRadius: 6,
-          background: saldoSuficiente ? "var(--trilha-verde-confirmacao)" : "var(--trilha-preto)",
-          color: saldoSuficiente ? "var(--trilha-preto)" : "var(--trilha-bege)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 10,
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            opacity: 0.75,
-          }}
-        >
-          Data provável da promoção
-        </div>
-        <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>
+      <div className={`checkpoint-data${saldoSuficiente ? " ok" : ""}`}>
+        <span>Data provável da promoção</span>
+        <b>
           {checkpointProvavel ? rotuloMes(checkpointProvavel) : "—"}
           {mesesAtePromocao !== null && (
-            <span style={{ fontSize: 14, fontWeight: 400, marginLeft: 10 }}>
-              ({mesesAtePromocao} {mesesAtePromocao === 1 ? "mês" : "meses"} a 100% da base)
-            </span>
+            <small>
+              {mesesAtePromocao} {mesesAtePromocao === 1 ? "mês" : "meses"} a 100% da base
+            </small>
           )}
-        </div>
+        </b>
       </div>
     </div>
   );

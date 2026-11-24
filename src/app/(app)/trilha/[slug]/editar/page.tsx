@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirDiretoria } from "@/lib/auth/sessao";
 import { MigracaoPendenteError, obterConteudo } from "@/lib/data/hub";
-import { AvisoMigracao } from "@/components/hub/basicos";
+import { AvisoMigracao, Cena, PaginaTopo, Voltar } from "@/components/hub/basicos";
 import { EditorConteudo } from "@/components/hub/conteudo-editor";
 
 export default async function EditarConteudoPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -13,30 +12,36 @@ export default async function EditarConteudoPage({ params }: { params: Promise<{
   try {
     conteudo = await obterConteudo(decodeURIComponent(slug));
   } catch (e) {
-    if (e instanceof MigracaoPendenteError) return <AvisoMigracao />;
+    if (e instanceof MigracaoPendenteError)
+      return (
+        <Cena>
+          <div style={{ marginTop: 28 }}>
+            <AvisoMigracao />
+          </div>
+        </Cena>
+      );
     throw e;
   }
   if (!conteudo) notFound();
 
   return (
-    <>
-      <header className="cliente-topo">
-        <Link href={conteudo.slug === "comece-aqui" ? "/trilha" : `/trilha/${conteudo.slug}`} className="voltar">
-          ← {conteudo.titulo}
-        </Link>
-        <p className="rotulo">Trilha do Assessor · editar</p>
-        <h1>{conteudo.titulo}</h1>
-      </header>
-      <EditorConteudo
-        conteudo={{
-          id: conteudo.id,
-          slug: conteudo.slug,
-          titulo: conteudo.titulo,
-          resumo: conteudo.resumo,
-          corpoMd: conteudo.corpoMd,
-          publicado: conteudo.publicado,
-        }}
-      />
-    </>
+    <Cena>
+      <div className="acoes-topo">
+        <Voltar href={conteudo.slug === "comece-aqui" ? "/trilha" : `/trilha/${conteudo.slug}`}>{conteudo.titulo}</Voltar>
+      </div>
+      <PaginaTopo titulo={conteudo.titulo} lede="Editar esta parte da Trilha do Assessor. O texto é Markdown." />
+      <section className="editor-secao">
+        <EditorConteudo
+          conteudo={{
+            id: conteudo.id,
+            slug: conteudo.slug,
+            titulo: conteudo.titulo,
+            resumo: conteudo.resumo,
+            corpoMd: conteudo.corpoMd,
+            publicado: conteudo.publicado,
+          }}
+        />
+      </section>
+    </Cena>
   );
 }

@@ -30,6 +30,19 @@ DESTINO = RAIZ / "data" / "seed"
 TAG = "$md_trilha_hub$"
 HOJE = dt.date.today().isoformat()
 
+# Trava contra texto colado com a codificação errada (ex.: "é" virando "√©"):
+# compara um literal acentuado com o mesmo texto escrito só em ASCII. Se não
+# bater, o script para antes de gravar qualquer coisa.
+TRAVA = """-- Trava de segurança: se os acentos chegaram quebrados na colagem, nada é gravado.
+do $trava$
+begin
+  if 'ação é' <> U&'a\\00E7\\00E3o \\00E9' then
+    raise exception 'Os acentos chegaram quebrados na colagem. Nada foi gravado: avise o Claude.';
+  end if;
+end
+$trava$;
+"""
+
 
 def sql_texto(v: str | None) -> str:
     if v is None or v == "":
@@ -78,6 +91,21 @@ def gerar_clientes(indice: list[dict]) -> str:
             )
             + ")"
         )
+    return f"""-- Trilha Hub · importação de clientes ({HOJE})
+-- Origem: clientes/index.json da Trilha do Assessor ({len(indice)} clientes).
+-- Rode DEPOIS de supabase/migrations/0007_hub_fundacao.sql.
+
+{TRAVA}
+insert into clientes (slug, nome, status, assessor_importado, squad, pacote, frase, objetivo,
+                      pede_atencao, piloto_assistente, exigencia_pts, links)
+values
+{(","+chr(10)).join(linhas)}
+on conflict (slug) do nothing;
+
+{sql_vinculo()}"""
+
+
+def sql_vinculo() -> str:
     norm = (
         "regexp_replace(translate(lower({x}), '"
         + ACENTOS_DE
@@ -85,17 +113,7 @@ def gerar_clientes(indice: list[dict]) -> str:
         + ACENTOS_PARA
         + "'), '[^a-z0-9]+', ' ', 'g')"
     )
-    return f"""-- Trilha Hub · importação de clientes ({HOJE})
--- Origem: clientes/index.json da Trilha do Assessor ({len(indice)} clientes).
--- Rode DEPOIS de supabase/migrations/0007_hub_fundacao.sql.
-
-insert into clientes (slug, nome, status, assessor_importado, squad, pacote, frase, objetivo,
-                      pede_atencao, piloto_assistente, exigencia_pts, links)
-values
-{(","+chr(10)).join(linhas)}
-on conflict (slug) do nothing;
-
--- Vincula cada cliente ao assessor do TrilhaCoins pelo nome: primeiro o
+    return f"""-- Vincula cada cliente ao assessor do TrilhaCoins pelo nome: primeiro o
 -- nome completo; se não casar, o primeiro nome (só quando é único).
 -- Quem não casar fica "sem assessor vinculado" para a gestão escolher.
 with norm as (
@@ -118,6 +136,60 @@ where alvo.id = c.id;
 -- Conferência: quem ficou sem assessor (vincule em Clientes → Editar).
 select slug, nome, assessor_importado from clientes where assessor_id is null order by nome;
 """
+
+
+def gerar_correcao_acentos(indice: list[dict]) -> str:
+    """Regrava os textos dos clientes já importados (caso tenham chegado com acento quebrado)."""
+    linhas = []
+    for c in indice:
+        squad = (c.get("squad") or "").strip().capitalize() or None
+        linhas.append(
+            "  ("
+            + ", ".join(
+                sql_texto(v)
+                for v in [c["slug"], c["nome"].strip(), c.get("frase"), c.get("objetivo"), c.get("pacote"), squad, c.get("assessor")]
+            )
+            + ")"
+        )
+    migracao = (RAIZ / "supabase" / "migrations" / "0007_hub_fundacao.sql").read_text(encoding="utf-8")
+    inicio = migracao.index("create or replace function public.clientes_antes_de_salvar()")
+    gatilho = migracao[inicio : migracao.index("$$;", inicio) + 3]
+    return f"""-- Trilha Hub · correção dos acentos dos clientes ({HOJE})
+-- Regrava nome, frase, objetivo, pacote, squad e assessor importado dos
+-- {len(indice)} clientes com o texto certo. Não mexe em assessor vinculado,
+-- nota de exigência, atalhos nem em nada editado no Hub além desses textos.
+
+{TRAVA}
+update clientes c set
+  nome = v.nome,
+  frase = v.frase,
+  objetivo = v.objetivo,
+  pacote = v.pacote,
+  squad = v.squad,
+  assessor_importado = v.assessor_importado
+from (values
+{(","+chr(10)).join(linhas)}
+) as v(slug, nome, frase, objetivo, pacote, squad, assessor_importado)
+where c.slug = v.slug;
+
+-- Mensagem do gatilho com o acento certo (caso a migration também tenha
+-- sido colada com acento quebrado).
+{gatilho}
+
+-- Conferência: as duas contagens devem dar 0.
+select
+  (select count(*) from clientes where nome like '%√%' or frase like '%√%' or objetivo like '%√%') as textos_quebrados,
+  (select count(*) from clientes where slug not in ({", ".join(sql_texto(c["slug"]) for c in indice)})) as clientes_desconhecidos;
+"""
+
+
+def gerar_vinculo(indice: list[dict]) -> str:
+    return f"""-- Trilha Hub · vincular clientes aos assessores ({HOJE})
+-- Rode depois de cadastrar assessores novos no Trilha Coins.
+-- Só preenche quem ainda está sem assessor; não mexe em vínculos feitos no Hub.
+
+{TRAVA}
+{sql_vinculo()}"""
 
 
 def gerar_dossies(indice: list[dict], pasta: Path) -> list[str]:
@@ -148,7 +220,7 @@ def gerar_dossies(indice: list[dict], pasta: Path) -> list[str]:
     total = len(partes)
     return [
         f"-- Trilha Hub · dossiês, parte {i} de {total} ({HOJE})\n"
-        f"-- Rode depois de 10_clientes.sql. Rodar de novo não sobrescreve edições feitas no Hub.\n\n" + "\n".join(p)
+        f"-- Rode depois de 10_clientes.sql. Rodar de novo não sobrescreve edições feitas no Hub.\n\n{TRAVA}\n" + "\n".join(p)
         for i, p in enumerate(partes, 1)
     ]
 
@@ -537,16 +609,20 @@ def gerar_conteudos(html_texto: str) -> str:
         )
         (DESTINO / "previa").mkdir(parents=True, exist_ok=True)
         (DESTINO / "previa" / f"{slug}.md").write_text(md.strip() + "\n", encoding="utf-8")
-    return f"-- Trilha Hub · Trilha do Assessor: processos e cultura ({HOJE})\n-- Rode depois da migration 0007. Rodar de novo não sobrescreve edições feitas no Hub.\n\n" + "\n".join(blocos_sql)
+    return f"-- Trilha Hub · Trilha do Assessor: processos e cultura ({HOJE})\n-- Rode depois da migration 0007. Rodar de novo não sobrescreve edições feitas no Hub.\n\n{TRAVA}\n" + "\n".join(blocos_sql)
 
 
 def main() -> None:
     indice = json.loads((ORIGEM / "clientes" / "index.json").read_text(encoding="utf-8"))
     DESTINO.mkdir(parents=True, exist_ok=True)
-    for antigo in DESTINO.glob("*.sql"):
-        antigo.unlink()
+    # apaga só o que este script gera; arquivos manuais (ex.: 14_*) ficam
+    for padrao in ("10_*.sql", "11_*.sql", "12_*.sql", "13_*.sql", "20_*.sql"):
+        for antigo in DESTINO.glob(padrao):
+            antigo.unlink()
 
     (DESTINO / "10_clientes.sql").write_text(gerar_clientes(indice), encoding="utf-8")
+    (DESTINO / "12_corrige_acentos_clientes.sql").write_text(gerar_correcao_acentos(indice), encoding="utf-8")
+    (DESTINO / "13_vincular_assessores.sql").write_text(gerar_vinculo(indice), encoding="utf-8")
     partes = gerar_dossies(indice, ORIGEM / "clientes")
     for i, sql in enumerate(partes, 1):
         (DESTINO / f"11_dossies_parte{i}.sql").write_text(sql, encoding="utf-8")

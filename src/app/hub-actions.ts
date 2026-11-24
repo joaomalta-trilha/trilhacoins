@@ -192,3 +192,31 @@ export async function salvarConteudoAction(
     return paraResultado(e);
   }
 }
+
+// ---------------------------------------------------------------
+// remover e restaurar usuários (só diretoria — a trava é do banco)
+// ---------------------------------------------------------------
+
+export async function removerUsuarioAction(
+  usuarioId: string
+): Promise<{ ok: true; modo: hub.ModoRemocao } | { ok: false; erro: string }> {
+  try {
+    const modo = await hub.removerUsuario(uuid(usuarioId));
+    revalidatePath("/gestao/usuarios");
+    revalidatePath("/gestao");
+    revalidatePath("/coins/ajustes");
+    return { ok: true, modo };
+  } catch (e) {
+    return paraResultado(e) as { ok: false; erro: string };
+  }
+}
+
+export async function restaurarUsuarioAction(usuarioId: string): Promise<Resultado> {
+  try {
+    await hub.restaurarUsuario(uuid(usuarioId));
+    revalidatePath("/gestao/usuarios");
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}

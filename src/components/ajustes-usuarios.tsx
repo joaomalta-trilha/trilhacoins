@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Trash2 } from "lucide-react";
 import { atualizarCarteiraAction, atualizarUsuarioAction } from "@/app/actions";
-import { atualizarPessoaAction } from "@/app/hub-actions";
+import { atualizarPessoaAction, removerUsuarioAction, restaurarUsuarioAction } from "@/app/hub-actions";
 import type { Papel } from "@/lib/auth/sessao";
 
 interface UsuarioEditavel {
@@ -15,6 +17,7 @@ interface UsuarioEditavel {
   nome: string | null;
   cargo: string | null;
   clickupUserId: number | null;
+  removidoEm: string | null;
 }
 
 // O gestor entra como "Diretoria": mesmos acessos. O cargo é o que
@@ -25,27 +28,39 @@ const PAPEIS: { valor: Papel; rotulo: string }[] = [
   { valor: "assessor", rotulo: "Assessor" },
 ];
 
+type Aviso = { tipo: "ok" | "erro"; texto: string } | null;
+
 export function AjustesUsuarios({
   usuarios,
   assessores,
+  usuarioAtualId,
 }: {
   usuarios: UsuarioEditavel[];
   assessores: { id: string; nome: string }[];
+  usuarioAtualId: string;
 }) {
-  const pendentes = usuarios.filter((u) => !u.ativo);
+  const [aviso, setAviso] = useState<Aviso>(null);
+  const visiveis = usuarios.filter((u) => !u.removidoEm);
+  const removidos = usuarios.filter((u) => u.removidoEm);
+  const pendentes = visiveis.filter((u) => !u.ativo);
 
   return (
     <div>
+      {aviso && (
+        <div className={`aviso ${aviso.tipo === "ok" ? "aviso-ok" : "aviso-erro"}`} role="status" style={{ marginBottom: 14 }}>
+          {aviso.texto}
+        </div>
+      )}
       {pendentes.length > 0 && (
-        <div className="aviso aviso-atencao" style={{ marginBottom: 12 }}>
+        <div className="aviso aviso-atencao" style={{ marginBottom: 14 }}>
           {pendentes.length === 1
             ? "1 pessoa entrou e está esperando aprovação de acesso."
             : `${pendentes.length} pessoas entraram e estão esperando aprovação de acesso.`}
         </div>
       )}
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table className="tabela" style={{ minWidth: 900 }}>
+      <div className="card caixa-tabela">
+        <div className="rolagem-x">
+          <table className="tabela tabela-topo" style={{ minWidth: 1020 }}>
             <thead>
               <tr>
                 <th>Pessoa</th>
@@ -54,16 +69,25 @@ export function AjustesUsuarios({
                 <th>Assessor(es) vinculado(s)</th>
                 <th>ID no ClickUp</th>
                 <th>Ativo</th>
+                <th aria-label="Remover" />
               </tr>
             </thead>
             <tbody>
-              {usuarios.map((u) => (
-                <LinhaUsuario key={u.id} usuario={u} assessores={assessores} />
+              {visiveis.map((u) => (
+                <LinhaUsuario
+                  key={u.id}
+                  usuario={u}
+                  assessores={assessores}
+                  ehVoce={u.id === usuarioAtualId}
+                  onAviso={setAviso}
+                />
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {removidos.length > 0 && <Removidos removidos={removidos} onAviso={setAviso} />}
     </div>
   );
 }
@@ -71,10 +95,15 @@ export function AjustesUsuarios({
 function LinhaUsuario({
   usuario,
   assessores,
+  ehVoce,
+  onAviso,
 }: {
   usuario: UsuarioEditavel;
   assessores: { id: string; nome: string }[];
+  ehVoce: boolean;
+  onAviso: (a: Aviso) => void;
 }) {
+  const router = useRouter();
   const [papel, setPapel] = useState<Papel>(usuario.papel);
   const [assessorId, setAssessorId] = useState(usuario.assessorId ?? "");
   const [carteira, setCarteira] = useState<string[]>(usuario.carteira);
@@ -82,6 +111,7 @@ function LinhaUsuario({
   const [nome, setNome] = useState(usuario.nome ?? "");
   const [cargo, setCargo] = useState(usuario.cargo ?? "");
   const [clickup, setClickup] = useState(usuario.clickupUserId ? String(usuario.clickupUserId) : "");
+  const [confirmando, setConfirmando] = useState(false);
   const [pending, startTransition] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
@@ -104,8 +134,28 @@ function LinhaUsuario({
   const salvarPessoa = (patch: { nome?: string; cargo?: string; clickupUserId?: string }) =>
     executar(() => atualizarPessoaAction(usuario.id, patch));
 
+  function remover() {
+    setErro(null);
+    startTransition(async () => {
+      const r = await removerUsuarioAction(usuario.id);
+      if (!r.ok) {
+        setErro(r.erro);
+        setConfirmando(false);
+        return;
+      }
+      onAviso({
+        tipo: "ok",
+        texto:
+          r.modo === "excluido"
+            ? `${usuario.email} foi removido. Se entrar de novo um dia, aparece aqui como pendente.`
+            : `${usuario.email} tem histórico no Coins, então perdeu o acesso e foi para "Removidos" (dá para restaurar).`,
+      });
+      router.refresh();
+    });
+  }
+
   return (
-    <tr style={{ background: !usuario.ativo && !ativo ? "rgba(238,76,32,0.06)" : undefined }}>
+    <tr className={!usuario.ativo && !ativo ? "linha-pendente" : undefined}>
       <td>
         <input
           className="input"
@@ -117,9 +167,12 @@ function LinhaUsuario({
           onBlur={() => nome !== (usuario.nome ?? "") && salvarPessoa({ nome })}
           style={{ width: 170 }}
         />
-        <div style={{ fontSize: 11, color: "var(--texto-suave)", marginTop: 3 }}>{usuario.email}</div>
+        <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 5 }}>
+          {usuario.email}
+          {ehVoce && <span className="voce">você</span>}
+        </div>
         {erro && <div className="erro-inline">{erro}</div>}
-        {salvo && <div style={{ fontSize: 11, color: "var(--trilha-verde-profundo)" }}>salvo</div>}
+        {salvo && <div className="msg-ok" style={{ fontSize: 11.5, marginTop: 4 }}>salvo</div>}
       </td>
       <td>
         <input
@@ -194,12 +247,12 @@ function LinhaUsuario({
                 </option>
               ))}
             </select>
-            <div style={{ fontSize: 11, color: "var(--texto-suave)", marginTop: 2 }}>
-              Ctrl/Cmd+clique para selecionar vários
+            <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>
+              Ctrl ou Cmd + clique para escolher vários
             </div>
           </div>
         )}
-        {papel === "diretoria" && <span style={{ color: "var(--texto-suave)" }}>— vê todo mundo —</span>}
+        {papel === "diretoria" && <span className="muted">Vê todo mundo</span>}
       </td>
       <td>
         <input
@@ -229,6 +282,76 @@ function LinhaUsuario({
           }}
         />
       </td>
+      <td style={{ whiteSpace: "nowrap" }}>
+        {ehVoce ? null : confirmando ? (
+          <span
+            className="confirmar-remocao"
+            // a tabela rola na horizontal: traz a confirmação para a vista
+            ref={(el) => el?.scrollIntoView({ block: "nearest", inline: "nearest" })}
+          >
+            <span>Remover?</span>
+            <button type="button" className="btn btn-perigo" disabled={pending} onClick={remover}>
+              {pending ? "Removendo…" : "Sim, remover"}
+            </button>
+            <button type="button" className="btn-link" disabled={pending} onClick={() => setConfirmando(false)}>
+              Cancelar
+            </button>
+          </span>
+        ) : (
+          <button
+            type="button"
+            className="btn-icone-so"
+            disabled={pending}
+            onClick={() => setConfirmando(true)}
+            aria-label={`Remover ${usuario.email}`}
+            title="Remover"
+          >
+            <Trash2 size={16} strokeWidth={1.6} aria-hidden="true" />
+          </button>
+        )}
+      </td>
     </tr>
+  );
+}
+
+function Removidos({ removidos, onAviso }: { removidos: UsuarioEditavel[]; onAviso: (a: Aviso) => void }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  function restaurar(u: UsuarioEditavel) {
+    startTransition(async () => {
+      const r = await restaurarUsuarioAction(u.id);
+      if (!r.ok) onAviso({ tipo: "erro", texto: r.erro });
+      else {
+        onAviso({ tipo: "ok", texto: `${u.email} voltou para a lista, ainda inativo. Marque "Ativo" para liberar o acesso.` });
+        router.refresh();
+      }
+    });
+  }
+
+  return (
+    <details className="card dobra" style={{ marginTop: 16 }}>
+      <summary>Removidos com histórico ({removidos.length})</summary>
+      <p className="muted" style={{ fontSize: 13 }}>
+        Sem acesso ao Hub e ao Coins. Ficam guardados porque aparecem no histórico (lançamentos, promoções ou log).
+      </p>
+      <ul className="lista-removidos">
+        {removidos.map((u) => (
+          <li key={u.id}>
+            <span>
+              {u.nome ? `${u.nome} · ` : ""}
+              {u.email}
+              <span className="muted pequeno">
+                {" "}
+                · removido em {new Date(u.removidoEm as string).toLocaleDateString("pt-BR", { timeZone: "America/Maceio" })}
+              </span>
+            </span>
+            <button type="button" className="btn btn-secundario" disabled={pending} onClick={() => restaurar(u)}>
+              Restaurar
+            </button>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
