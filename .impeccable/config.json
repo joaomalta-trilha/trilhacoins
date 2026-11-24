@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "sf mono",
+        "createdAt": "2026-11-24T19:21:03.277Z",
+        "reason": "build decision (Claude): system monospace stack used only for inline code and the Markdown source editor textarea; code, not a display face"
+      }
+    ]
+  }
+}

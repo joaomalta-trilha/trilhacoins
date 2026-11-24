@@ -12,6 +12,7 @@ import {
   notasDeAcesso,
   resumoDoItem,
   secao,
+  separarTarefa,
   secoesDaConta,
   textoDaSecao,
 } from "@/lib/hub/dossie";
@@ -66,6 +67,12 @@ const LINKS_ROTINA: [keyof ClienteRow["links"], string, LucideIcon][] = [
   ["checkin", "Check-in do assessor", PlayCircle],
   ["recorrencia", "Mensagens em Feedback", MessageSquare],
 ];
+
+/** Itens "[ ]" do Markdown viram uma marca desenhada, não texto cru. */
+function classeTarefa(texto: string): string | undefined {
+  const t = separarTarefa(texto);
+  return t.tarefa ? `tarefa${t.feita ? " feita" : ""}` : undefined;
+}
 
 /** Quais partes existem neste dossiê (para as pílulas de navegação). */
 export function partesDoDossie(d: Dossie): { id: string; rotulo: string }[] {
@@ -188,7 +195,7 @@ export function DossieRotina({ d, cliente }: { d: Dossie; cliente: ClienteRow })
       {rotina ? (
         <>
           {rotina.intro.length > 0 && (
-            <div style={{ marginBottom: 18, maxWidth: "80ch" }}>
+            <div className="rotina-intro">
               <Md texto={rotina.intro.join("\n")} />
             </div>
           )}
@@ -204,7 +211,11 @@ export function DossieRotina({ d, cliente }: { d: Dossie; cliente: ClienteRow })
                     </span>
                     <ul className="dia-resumo">
                       {itens.length ? (
-                        itens.map((t, i) => <li key={i}>{resumoDoItem(t)}</li>)
+                        itens.map((t, i) => (
+                          <li key={i} className={classeTarefa(t)}>
+                            {resumoDoItem(t)}
+                          </li>
+                        ))
                       ) : (
                         <li className="muted">Sem rito neste dia.</li>
                       )}
@@ -214,8 +225,8 @@ export function DossieRotina({ d, cliente }: { d: Dossie; cliente: ClienteRow })
                   {itens.length > 0 && (
                     <ul className="dia-completo">
                       {itens.map((t, i) => (
-                        <li key={i}>
-                          <MdInline texto={t} />
+                        <li key={i} className={classeTarefa(t)}>
+                          <MdInline texto={separarTarefa(t).texto} />
                         </li>
                       ))}
                     </ul>

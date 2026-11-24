@@ -26,14 +26,6 @@
   font-style: normal;
   font-display: swap;
 }
-/* destaque da marca: serifa itálica, só em um título curto */
-@font-face {
-  font-family: "Droid Serif";
-  src: url("/brand/fonts/DroidSerif-BoldItalic.woff2") format("woff2");
-  font-weight: 700;
-  font-style: italic;
-  font-display: swap;
-}
 
 /* ---------- tokens ---------- */
 :root {
@@ -69,7 +61,6 @@
   --bad-ink: #a8321a;
 
   --fonte: "PolySans", "Helvetica Neue", Arial, sans-serif;
-  --serifa: "Droid Serif", Georgia, serif;
   --r: 26px;
   --r-md: 20px;
   --r-sm: 14px;
@@ -532,13 +523,6 @@ h1 {
   font: 400 54px/1.04 var(--fonte);
   letter-spacing: -0.02em;
   text-wrap: balance;
-}
-h1 em {
-  font-family: var(--serifa);
-  font-style: italic;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--accent);
 }
 .lede {
   max-width: 62ch;
@@ -2263,12 +2247,15 @@ details.dobra.escura {
 .etapa {
   min-height: 210px;
 }
-.etapa .num {
-  font-size: 44px;
-}
 .etapa h3 {
   margin-top: 22px;
   font: 500 15px/1.3 var(--fonte);
+}
+.etapa-rotulo {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
 }
 .etapa p {
   margin-top: 6px;
@@ -2507,16 +2494,20 @@ details.dobra.escura {
 .form-grade fieldset {
   display: grid;
   gap: 12px;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
+  padding: 18px 20px 20px;
+  border: 0;
   border-radius: 20px;
+  background: var(--soft);
 }
 .form-grade legend {
-  padding: 0 6px;
-  font-size: 12px;
-  color: var(--muted);
+  float: left;
+  width: 100%;
+  padding: 0;
+  font: 500 13px/1.3 var(--fonte);
+  color: var(--ink);
 }
 label.check {
+  display: inline-flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
@@ -2635,10 +2626,16 @@ label.check {
   height: 100%;
 }
 .tela-centro .brilho::before {
+  /* na porta o texto fica no meio da tela: brilho sem o miolo escuro */
   left: 26%;
   top: 4%;
   width: 52%;
   height: 92%;
+  background:
+    radial-gradient(45% 50% at 55% 60%, var(--accent) 0%, transparent 70%),
+    radial-gradient(50% 55% at 40% 78%, var(--amber) 0%, transparent 72%),
+    radial-gradient(60% 60% at 70% 40%, #f6d7a8 0%, transparent 75%);
+  opacity: 0.7;
 }
 .porta {
   width: 100%;
@@ -2931,4 +2928,181 @@ label.check {
   height: 10px;
   border-radius: 3px;
   background: var(--c);
+}
+
+/* na porta (login, sem acesso) a marca fica centralizada como o resto */
+.porta .marca {
+  justify-self: center;
+}
+
+/* ---------- ajustes da revisão de design ---------- */
+
+/* rotina do dossiê: tarefas "[ ]" viram uma marca; introdução reta e curta */
+.rotina-intro {
+  max-width: 65ch;
+  margin-bottom: 18px;
+}
+.rotina-intro em {
+  font-style: normal;
+}
+.dia-resumo li.tarefa,
+.dia-completo li.tarefa {
+  position: relative;
+  padding-left: 20px;
+}
+.dia-resumo li.tarefa::before,
+.dia-completo li.tarefa::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: calc(9px + 0.38em);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--dark-muted);
+}
+.dia-resumo li.tarefa.feita::before,
+.dia-completo li.tarefa.feita::before {
+  border-color: var(--ok);
+  background: var(--ok);
+}
+
+/* fileiras que rolam para o lado: a borda esmaece enquanto há mais */
+.ancoras-caixa {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+  pointer-events: auto;
+}
+.ancoras-caixa::before,
+.ancoras-caixa::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 44px;
+  border-radius: 999px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease);
+}
+.ancoras-caixa::before {
+  left: 4px;
+  background: linear-gradient(270deg, rgba(255, 255, 255, 0), #fff 70%);
+}
+.ancoras-caixa::after {
+  right: 4px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 70%);
+}
+.ancoras-caixa.tem-antes::before,
+.ancoras-caixa.tem-depois::after {
+  opacity: 1;
+}
+.rolagem-borda {
+  position: relative;
+}
+.rolagem-borda::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--card) 85%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s var(--ease);
+}
+.rolagem-borda.tem-mais::after {
+  opacity: 1;
+}
+
+/* escolha de vários em pílulas (carteira de coordenação) */
+.escolha-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 320px;
+}
+.chip-escolha {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-2);
+  font: 400 12px/1 var(--fonte);
+  transition:
+    background 0.2s var(--ease),
+    color 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+.chip-escolha:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.chip-escolha:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.chip-escolha[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.chip-escolha:disabled {
+  opacity: 0.5;
+}
+.chip-escolha svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* interruptor no lugar da caixinha do navegador */
+input[type="checkbox"].interruptor {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: #d3d3ce;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.25s var(--ease);
+}
+input[type="checkbox"].interruptor::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s var(--ease);
+}
+input[type="checkbox"].interruptor:checked {
+  background: var(--ink);
+}
+input[type="checkbox"].interruptor:checked::before {
+  transform: translateX(16px);
+}
+input[type="checkbox"].interruptor:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* campos numéricos sem as setinhas do navegador (o valor precisa caber) */
+.input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.input[type="number"]::-webkit-inner-spin-button,
+.input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

@@ -14,7 +14,7 @@ import { SeletorAssessor } from "@/components/seletor-assessor";
 import { SeletorMes } from "@/components/seletor-mes";
 import { RequisitoMacroToggle } from "@/components/requisito-macro-toggle";
 import { RankingMes } from "@/components/ranking-mes";
-import { AnelProgresso, BlocoCheckpoint, GraficoHistorico, MetricaEscura } from "@/components/painel-assessor";
+import { BlocoCheckpoint, GraficoHistorico, MetricaEscura } from "@/components/painel-assessor";
 import { Barra, Card, fmt, rotuloMes } from "@/components/ui";
 
 export default async function AssessorPage({
@@ -96,8 +96,6 @@ export default async function AssessorPage({
               )}
             </p>
           </div>
-
-          {painel.custoProximaTransicao !== null && <AnelProgresso pct={painel.pctNivel} apto={painel.aptoPorSaldo} />}
         </div>
 
         <div style={{ marginTop: 24 }}>

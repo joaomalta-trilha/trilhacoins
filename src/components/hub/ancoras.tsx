@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /** Linha de leitura: logo abaixo das pílulas presas no topo. */
 const LINHA = 150;
 
 /**
  * Pílulas presas no topo que levam às partes de uma página longa (o
- * dossiê) e acendem a parte que está sendo lida.
+ * dossiê) e acendem a parte que está sendo lida. No celular a fileira
+ * rola para o lado: a borda esmaece enquanto há mais pílulas escondidas.
  */
 export function Ancoras({ itens }: { itens: { id: string; rotulo: string }[] }) {
   const [ativo, setAtivo] = useState<string | null>(null);
+  const [borda, setBorda] = useState({ antes: false, depois: false });
+  const fileira = useRef<HTMLElement>(null);
 
+  // qual parte está sendo lida
   useEffect(() => {
     let quadro = 0;
     function medir() {
@@ -38,15 +42,45 @@ export function Ancoras({ itens }: { itens: { id: string; rotulo: string }[] }) 
     };
   }, [itens]);
 
+  // há pílulas escondidas para algum dos lados?
+  useEffect(() => {
+    const el = fileira.current;
+    if (!el) return;
+    const medir = () =>
+      setBorda({
+        antes: el.scrollLeft > 2,
+        depois: el.scrollLeft + el.clientWidth < el.scrollWidth - 2,
+      });
+    medir();
+    el.addEventListener("scroll", medir, { passive: true });
+    const obs = new ResizeObserver(medir);
+    obs.observe(el);
+    return () => {
+      el.removeEventListener("scroll", medir);
+      obs.disconnect();
+    };
+  }, []);
+
+  // a pílula da parte lida fica sempre à vista na fileira
+  useEffect(() => {
+    const el = fileira.current;
+    const pilula = el?.querySelector<HTMLElement>('[aria-current="true"]');
+    if (!el || !pilula) return;
+    const fora = pilula.offsetLeft < el.scrollLeft || pilula.offsetLeft + pilula.offsetWidth > el.scrollLeft + el.clientWidth;
+    if (fora) el.scrollTo({ left: Math.max(0, pilula.offsetLeft - 24), behavior: "smooth" });
+  }, [ativo]);
+
   return (
     <div className="ancoras-trilho wrap">
-      <nav className="ancoras" aria-label="Partes do dossiê">
-        {itens.map((i) => (
-          <a key={i.id} href={`#${i.id}`} aria-current={ativo === i.id ? "true" : undefined}>
-            {i.rotulo}
-          </a>
-        ))}
-      </nav>
+      <div className={`ancoras-caixa${borda.antes ? " tem-antes" : ""}${borda.depois ? " tem-depois" : ""}`}>
+        <nav ref={fileira} className="ancoras" aria-label="Partes do dossiê">
+          {itens.map((i) => (
+            <a key={i.id} href={`#${i.id}`} aria-current={ativo === i.id ? "true" : undefined}>
+              {i.rotulo}
+            </a>
+          ))}
+        </nav>
+      </div>
     </div>
   );
 }

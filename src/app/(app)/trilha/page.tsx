@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BookOpen, Bookmark } from "lucide-react";
+import { BookOpen, Bookmark, CornerDownRight, Footprints } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { type ConteudoRow, MigracaoPendenteError, listarConteudos } from "@/lib/data/hub";
 import { AvisoMigracao, Cena, Chip, Ic, PaginaTopo, Seta } from "@/components/hub/basicos";
@@ -34,11 +34,7 @@ export default async function TrilhaPage() {
   return (
     <Cena>
       <PaginaTopo
-        titulo={
-          <>
-            Trilha do <em>Assessor</em>
-          </>
-        }
+        titulo="Trilha do Assessor"
         lede="O caminho de entrada na operação, nesta ordem: quem é a Trilha, como trabalhamos, o que acontece por trás e os Trilha Coins."
       />
 
@@ -75,19 +71,17 @@ export default async function TrilhaPage() {
           return (
             <Link key={c.id} href={`/trilha/${c.slug}`} className={`card etapa${c.publicado ? "" : " rascunho"}`}>
               <div className="card-hd">
-                {n ? (
-                  <span className="num">
-                    {n}
-                    <small>{continuacao ? "etapa, continuação" : "etapa"}</small>
-                  </span>
-                ) : (
-                  <Ic>
+                <Ic>
+                  {n ? (
+                    continuacao ? <CornerDownRight strokeWidth={1.6} /> : <Footprints strokeWidth={1.6} />
+                  ) : (
                     <Bookmark strokeWidth={1.6} />
-                  </Ic>
-                )}
+                  )}
+                </Ic>
                 <Seta />
               </div>
               <h3>{c.titulo}</h3>
+              {n && <span className="etapa-rotulo">{continuacao ? `Continuação da etapa ${n}` : `Etapa ${n}`}</span>}
               {c.resumo && <p>{c.resumo}</p>}
               {!c.publicado && ehDiretoria && (
                 <div className="chips">

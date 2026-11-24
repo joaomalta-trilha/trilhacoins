@@ -23,6 +23,6 @@ STORY: The assessor sees today's ritos per client and who is at risk before anyt
 
 FIRST VIEWPORT: Top bar (mark + "trilha hub" left, section pills center, Gestão|Assessor segmented switch + avatar right). Início: left, greeting h1 ~54px with date and "N ritos em M clientes" lede plus weekday sub-pills; right, the "pedem atenção" gradient card with client chips; below, white routine cards per client in 3 columns. Visão geral: h1 + lede left, big light "clientes ativos" number right, then 3×2 metric cards with go arrows; dark band with ranked carteira rows.
 
-FORM: Two-layer dashboard (light hero + dark band), fixed by the pinned reference and the user's three answers; no structure dice or seed were used.
+FORM: seed: none (pinned). Pin: the user's own "Saúde dos Clientes" panel is the world, and answer 3 ("today's routine per client and who needs attention first, carteira and Coins below") is the first-surface experience; the form is a two-layer dashboard (light hero + dark band).
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { RolagemX } from "./rolagem-x";
 import {
   fecharMesAction,
   lancarMetaAction,
@@ -139,8 +140,8 @@ export function GradeLancamento({
       )}
 
       <div className="card" style={{ marginTop: 14, padding: 0, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table className="tabela" style={{ minWidth: 1050, fontSize: "12.5px" }}>
+        <RolagemX>
+          <table className="tabela" style={{ minWidth: 1180, fontSize: "12.5px" }}>
             <thead>
               <tr>
                 <th style={{ position: "sticky", left: 0, zIndex: 1, background: "var(--card)", minWidth: 150 }}>
@@ -195,7 +196,7 @@ export function GradeLancamento({
               })}
             </tbody>
           </table>
-        </div>
+        </RolagemX>
       </div>
     </>
   );
@@ -272,7 +273,7 @@ function CampoMeta({
             className="input"
             value={valor ?? ""}
             onChange={(e) => onChange(e.target.value)}
-            style={{ width: 60 }}
+            style={{ width: 78 }}
             placeholder="—"
           />
           <span style={{ color: "var(--texto-suave)" }}>%</span>
@@ -291,7 +292,7 @@ function CampoMeta({
           className="input"
           value={valor ?? ""}
           onChange={(e) => onChange(e.target.value)}
-          style={{ width: 60 }}
+          style={{ width: 72 }}
           placeholder="0"
         />
         {nota}
@@ -308,7 +309,7 @@ function CampoMeta({
         className="input"
         value={valor ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        style={{ width: 70 }}
+        style={{ width: 88 }}
         placeholder="coins"
       />
       {nota}

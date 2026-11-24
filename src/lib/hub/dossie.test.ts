@@ -10,6 +10,7 @@ import {
   linksDeAcesso,
   notasDeAcesso,
   resumoDoItem,
+  separarTarefa,
   secao,
   secoesDaConta,
   textoDaSecao,
@@ -217,5 +218,16 @@ describe("resumoDoItem", () => {
     );
     expect(r.endsWith("…")).toBe(true);
     expect(r.length).toBeLessThanOrEqual(59);
+  });
+});
+
+describe("separarTarefa", () => {
+  it("tira a caixinha das listas de tarefa do Markdown", () => {
+    expect(separarTarefa("[ ] Conferir o pixel")).toEqual({ tarefa: true, feita: false, texto: "Conferir o pixel" });
+    expect(separarTarefa("[x] Relatório enviado")).toEqual({ tarefa: true, feita: true, texto: "Relatório enviado" });
+    expect(separarTarefa("Check-in")).toEqual({ tarefa: false, feita: false, texto: "Check-in" });
+  });
+  it("o resumo do item não mostra a caixinha", () => {
+    expect(resumoDoItem("[ ] A conta está entregando? Conferir saldo.")).toBe("A conta está entregando? Conferir saldo");
   });
 });

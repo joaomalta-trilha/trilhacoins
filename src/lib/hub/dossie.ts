@@ -350,9 +350,19 @@ export function secoesDaConta(d: Dossie): SecaoDossie[] {
 }
 
 /** Resumo curto de um item da rotina, para caber no calendário. */
+/**
+ * Item de lista de tarefas do Markdown ("[ ] fazer", "[x] feito"): devolve
+ * o texto sem a caixinha, para a tela desenhar a marca no lugar dela.
+ */
+export function separarTarefa(texto: string): { tarefa: boolean; feita: boolean; texto: string } {
+  const m = texto.match(/^\s*\[( |x|X)\]\s+/);
+  if (!m) return { tarefa: false, feita: false, texto };
+  return { tarefa: true, feita: m[1].toLowerCase() === "x", texto: texto.slice(m[0].length) };
+}
+
 export function resumoDoItem(texto: string): string {
-  const s = texto
-    .replace(/\*\*|`|_/g, "")
+  const s = separarTarefa(texto)
+    .texto.replace(/\*\*|`|_/g, "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .trim();
   const doisPontos = s.indexOf(":");

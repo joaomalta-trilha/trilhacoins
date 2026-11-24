@@ -47,3 +47,6 @@ BRIEFING-trilhahub.md
 /node_modules.nosync
 /.next.nosync
 /.next
+
+# capturas de tela da revisão de design: mostram dados reais de clientes
+/.impeccable/review/

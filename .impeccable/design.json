@@ -1,0 +1,759 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-24T19:20:00+00:00",
+  "title": "Design System: Trilha Hub",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#e6e6e3",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cacac9",
+          "#eeeeed"
+        ],
+        "cssVar": "--bg"
+      },
+      "card-white": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ],
+        "cssVar": "--card"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ],
+        "cssVar": "--ink"
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#4a4d4b",
+        "tonalRamp": [
+          "#0a0b0b",
+          "#232423",
+          "#3e403f",
+          "#5b5e5c",
+          "#7e817f",
+          "#a2a5a3",
+          "#c9cbca",
+          "#edefee"
+        ],
+        "cssVar": "--ink-2"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Sage Grey",
+        "canonical": "#5f625f",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#232423",
+          "#3e403e",
+          "#5c5e5c",
+          "#7e817e",
+          "#a3a5a3",
+          "#c9cbc9",
+          "#edefed"
+        ],
+        "cssVar": "--muted"
+      },
+      "placeholder": {
+        "role": "neutral",
+        "displayName": "Placeholder Grey",
+        "canonical": "#6f7370",
+        "tonalRamp": [
+          "#0a0b0b",
+          "#232523",
+          "#3e413e",
+          "#5b5f5c",
+          "#7d817e",
+          "#a2a6a3",
+          "#c8cbc9",
+          "#edefee"
+        ],
+        "cssVar": "--placeholder"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dcdcd8",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242422",
+          "#40403d",
+          "#5e5e5a",
+          "#80807d",
+          "#a5a5a1",
+          "#cbcbc8",
+          "#eeeeed"
+        ],
+        "cssVar": "--line"
+      },
+      "line-soft": {
+        "role": "neutral",
+        "displayName": "Soft Hairline",
+        "canonical": "#ececea",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeee"
+        ],
+        "cssVar": "--line-soft"
+      },
+      "soft": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#f3f3f1",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403e",
+          "#5e5e5c",
+          "#80807e",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeee"
+        ],
+        "cssVar": "--soft"
+      },
+      "trilha-orange": {
+        "role": "primary",
+        "displayName": "Trilha Orange",
+        "canonical": "#ee4c20",
+        "tonalRamp": [
+          "#220000",
+          "#490700",
+          "#741b02",
+          "#a72900",
+          "#e03d09",
+          "#ff7452",
+          "#ffb6a3",
+          "#ffe9e3"
+        ],
+        "cssVar": "--accent"
+      },
+      "orange-ink": {
+        "role": "primary",
+        "displayName": "Burnt Orange Ink",
+        "canonical": "#c93d18",
+        "tonalRamp": [
+          "#220000",
+          "#480800",
+          "#761800",
+          "#a62b06",
+          "#d74a27",
+          "#f67c5e",
+          "#feb6a4",
+          "#ffe9e3"
+        ],
+        "cssVar": "--accent-ink"
+      },
+      "amber": {
+        "role": "primary",
+        "displayName": "Glow Amber",
+        "canonical": "#f3a23a",
+        "tonalRamp": [
+          "#180600",
+          "#371d00",
+          "#5c3600",
+          "#835103",
+          "#b1700e",
+          "#d89441",
+          "#f3c088",
+          "#ffebd6"
+        ],
+        "cssVar": "--amber"
+      },
+      "band": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "#111110",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5c",
+          "#80807f",
+          "#a5a5a3",
+          "#cacac9",
+          "#eeeeee"
+        ],
+        "cssVar": "--dark"
+      },
+      "band-panel": {
+        "role": "neutral",
+        "displayName": "Night Panel",
+        "canonical": "#1b1b1a",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242423",
+          "#40403f",
+          "#5e5e5c",
+          "#80807f",
+          "#a5a5a3",
+          "#cacaca",
+          "#eeeeee"
+        ],
+        "cssVar": "--dark-2"
+      },
+      "band-panel-hover": {
+        "role": "neutral",
+        "displayName": "Night Panel Lifted",
+        "canonical": "#232321",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cacac9",
+          "#eeeeed"
+        ],
+        "cssVar": "--dark-3"
+      },
+      "band-line": {
+        "role": "neutral",
+        "displayName": "Night Line",
+        "canonical": "#2a2a28",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cacac9",
+          "#eeeeed"
+        ],
+        "cssVar": "--dark-line"
+      },
+      "band-muted": {
+        "role": "neutral",
+        "displayName": "Night Muted",
+        "canonical": "#8d8d88",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242422",
+          "#40403c",
+          "#5e5e59",
+          "#80807c",
+          "#a5a5a0",
+          "#cbcbc7",
+          "#eeeeec"
+        ],
+        "cssVar": "--dark-muted"
+      },
+      "band-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#ededea",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242423",
+          "#40403e",
+          "#5e5e5b",
+          "#80807e",
+          "#a5a5a2",
+          "#cacac9",
+          "#eeeeed"
+        ],
+        "cssVar": "--dark-ink"
+      },
+      "band-soft": {
+        "role": "neutral",
+        "displayName": "Night Soft",
+        "canonical": "#d9d9d5",
+        "tonalRamp": [
+          "#0b0b0a",
+          "#242422",
+          "#40403d",
+          "#5e5e5a",
+          "#80807d",
+          "#a5a5a1",
+          "#cbcbc8",
+          "#eeeeed"
+        ],
+        "cssVar": "--dark-soft"
+      },
+      "ok": {
+        "role": "status",
+        "displayName": "Confirm Green",
+        "canonical": "#5fbf8a",
+        "tonalRamp": [
+          "#001004",
+          "#002d17",
+          "#014d2d",
+          "#007043",
+          "#319563",
+          "#69b88b",
+          "#a2dab8",
+          "#d5f9e2"
+        ],
+        "cssVar": "--ok"
+      },
+      "warn": {
+        "role": "status",
+        "displayName": "Wait Amber",
+        "canonical": "#f0a531",
+        "tonalRamp": [
+          "#160700",
+          "#351e00",
+          "#593800",
+          "#7f5306",
+          "#ac7313",
+          "#d5963b",
+          "#f0c186",
+          "#ffebd3"
+        ],
+        "cssVar": "--warn"
+      },
+      "bad": {
+        "role": "status",
+        "displayName": "Alert Red",
+        "canonical": "#e0492a",
+        "tonalRamp": [
+          "#230000",
+          "#4a0400",
+          "#781200",
+          "#aa2302",
+          "#db4425",
+          "#fa785c",
+          "#feb6a6",
+          "#ffe9e4"
+        ],
+        "cssVar": "--bad"
+      },
+      "ok-bg": {
+        "role": "status",
+        "displayName": "Confirm Tint",
+        "canonical": "#e3f2e9",
+        "tonalRamp": [
+          "#080c0a",
+          "#1f2622",
+          "#38433d",
+          "#54615a",
+          "#77847c",
+          "#9ca8a1",
+          "#c4cdc8",
+          "#eaf0ed"
+        ],
+        "cssVar": "--ok-bg"
+      },
+      "ok-ink": {
+        "role": "status",
+        "displayName": "Confirm Ink",
+        "canonical": "#23633f",
+        "tonalRamp": [
+          "#000f05",
+          "#082c18",
+          "#174b2e",
+          "#2d6c48",
+          "#519069",
+          "#7eb390",
+          "#afd6bb",
+          "#ddf6e5"
+        ],
+        "cssVar": "--ok-ink"
+      },
+      "wait-bg": {
+        "role": "status",
+        "displayName": "Wait Tint",
+        "canonical": "#fdf0dc",
+        "tonalRamp": [
+          "#0e0b06",
+          "#29231a",
+          "#473e31",
+          "#675c4b",
+          "#8a7e6d",
+          "#ada393",
+          "#d1c9bd",
+          "#f3eee6"
+        ],
+        "cssVar": "--wait-bg"
+      },
+      "wait-ink": {
+        "role": "status",
+        "displayName": "Wait Ink",
+        "canonical": "#8a5a00",
+        "tonalRamp": [
+          "#160700",
+          "#341f00",
+          "#583801",
+          "#805300",
+          "#a7752b",
+          "#c89c61",
+          "#e6c49b",
+          "#ffebd3"
+        ],
+        "cssVar": "--wait-ink"
+      },
+      "bad-bg": {
+        "role": "status",
+        "displayName": "Alert Tint",
+        "canonical": "#fbe7e1",
+        "tonalRamp": [
+          "#0f0a08",
+          "#2b221f",
+          "#493c38",
+          "#6a5954",
+          "#8d7c76",
+          "#b1a19c",
+          "#d4c7c4",
+          "#f5ecea"
+        ],
+        "cssVar": "--bad-bg"
+      },
+      "bad-ink": {
+        "role": "status",
+        "displayName": "Alert Ink",
+        "canonical": "#a8321a",
+        "tonalRamp": [
+          "#1f0000",
+          "#480700",
+          "#761602",
+          "#a42e15",
+          "#cd553c",
+          "#ed826b",
+          "#ffb6a5",
+          "#ffe9e4"
+        ],
+        "cssVar": "--bad-ink"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display number",
+        "purpose": "The single headline number of a screen (placar); 88px for the Coins balance, 64px for large card numbers."
+      },
+      "headline": {
+        "displayName": "Page title",
+        "purpose": "Page h1; 46px under 1000px, 38px under 640px."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Section and group h2s on light and dark grounds; 23px on phones."
+      },
+      "number": {
+        "displayName": "Card number",
+        "purpose": "Metric values in cards and panels, with a 12px muted unit."
+      },
+      "title": {
+        "displayName": "Title (Median)",
+        "purpose": "Card titles, panel heads, weekday names, summaries."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default text; Markdown at 14.5/1.6, reading pages at 16/1.65."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "Sentence under the h1, Graphite, max 62ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions, counts, meta lines; sentence case, no tracking."
+      },
+      "button": {
+        "displayName": "Button (Median)",
+        "purpose": "Action buttons. Navigation pills use Slim 400 13px."
+      }
+    },
+    "fonts": [
+      {
+        "family": "PolySans",
+        "face": "Slim",
+        "src": "/brand/fonts/PolySans_Slim.woff2",
+        "weightRange": "100 449"
+      },
+      {
+        "family": "PolySans",
+        "face": "Median",
+        "src": "/brand/fonts/PolySans_Median.woff2",
+        "weightRange": "450 1000"
+      }
+    ],
+    "shadows": [
+      {
+        "name": "hover-lift",
+        "value": "0 22px 40px -24px rgba(0, 0, 0, 0.4)",
+        "purpose": "Link cards on hover, with a 4px rise."
+      },
+      {
+        "name": "shortcut-lift",
+        "value": "0 16px 30px -22px rgba(0, 0, 0, 0.45)",
+        "purpose": "Shortcut tiles on hover, with a 2px rise."
+      },
+      {
+        "name": "popover",
+        "value": "0 30px 80px -30px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.06)",
+        "purpose": "Account popover."
+      },
+      {
+        "name": "rail",
+        "value": "0 12px 30px -18px rgba(0, 0, 0, 0.45)",
+        "purpose": "Sticky dossiê anchor rail."
+      },
+      {
+        "name": "dock",
+        "value": "0 18px 40px -16px rgba(0, 0, 0, 0.55)",
+        "purpose": "Phone dock."
+      }
+    ],
+    "glow": {
+      "value": "radial-gradient(40% 45% at 45% 30%, #2b2522 0%, transparent 70%), radial-gradient(45% 50% at 55% 55%, #ee4c20 0%, transparent 70%), radial-gradient(50% 55% at 40% 75%, #f3a23a 0%, transparent 72%), radial-gradient(60% 60% at 70% 40%, #f6d7a8 0%, transparent 75%)",
+      "filter": "blur(48px)",
+      "opacity": 0.85,
+      "mask": "linear-gradient(to bottom, #000 45%, transparent 96%)",
+      "purpose": "The brown to orange to amber glow behind the top of every screen; drifts over 18s, off under 900px and under reduced motion."
+    },
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Default ease-out for every state transition (hover lifts, arrow turn, switch, pills)."
+      },
+      {
+        "name": "ease-io",
+        "value": "cubic-bezier(0.65, 0, 0.35, 1)",
+        "purpose": "The slow alternating glow drift only."
+      },
+      {
+        "name": "arrow-turn",
+        "value": "rotate(45deg) 0.4s ease",
+        "purpose": "Arrow circle when its link is hovered or focused."
+      },
+      {
+        "name": "card-lift",
+        "value": "translateY(-4px) 0.45s ease",
+        "purpose": "Link card hover."
+      },
+      {
+        "name": "press",
+        "value": "scale(0.96) to scale(0.97) 0.2s ease",
+        "purpose": "Pills, chips and buttons while pressed."
+      },
+      {
+        "name": "switch-slide",
+        "value": "translateX(100%) 0.45s ease",
+        "purpose": "Gestão | Assessor indicator."
+      },
+      {
+        "name": "glow-drift",
+        "value": "translate(4%, 3%) scale(1.06) rotate(4deg), 18s ease-io infinite alternate",
+        "purpose": "The only ambient motion; no page-load entrance choreography."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all animations and transitions off",
+        "purpose": "prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "switch-to-popover",
+        "value": "1180px",
+        "purpose": "Gestão | Assessor switch moves into the account popover."
+      },
+      {
+        "name": "compact-bar",
+        "value": "1100px",
+        "purpose": "Wordmark text hides; ranked rows reflow."
+      },
+      {
+        "name": "stack-hero",
+        "value": "1000px",
+        "purpose": "Hero stacks; 3-column grids go to 2."
+      },
+      {
+        "name": "dock",
+        "value": "899px",
+        "purpose": "Center pills give way to the dark bottom dock; gutters 20px; glow drift off."
+      },
+      {
+        "name": "phone",
+        "value": "640px",
+        "purpose": "Single-column grids, smaller type."
+      },
+      {
+        "name": "small-phone",
+        "value": "480px",
+        "purpose": "16px gutters."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ink pill for the main action of a form or screen.",
+      "html": "<button class=\"ds-btn ds-btn-primario\">Salvar dossiê</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 20px; border-radius: 999px; border: 1px solid transparent; font: 500 13px/1 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); white-space: nowrap; cursor: pointer; transition: background .2s cubic-bezier(0.22, 1, 0.36, 1), border-color .2s cubic-bezier(0.22, 1, 0.36, 1), transform .2s cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn:active { transform: scale(0.97); } .ds-btn:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-btn-primario { background: var(--ink, #141414); color: #fff; } .ds-btn-primario:hover { background: #2e2e2c; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Translucent outlined pill for secondary actions on paper.",
+      "html": "<button class=\"ds-btn-sec\">Cancelar</button>",
+      "css": ".ds-btn-sec { display: inline-flex; align-items: center; height: 40px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(20,20,20,.16); background: rgba(255,255,255,.55); color: var(--ink, #141414); font: 500 13px/1 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); cursor: pointer; transition: background .2s cubic-bezier(0.22, 1, 0.36, 1), border-color .2s cubic-bezier(0.22, 1, 0.36, 1), transform .2s cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-sec:hover { background: #fff; border-color: var(--ink, #141414); } .ds-btn-sec:active { transform: scale(0.97); } .ds-btn-sec:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; }"
+    },
+    {
+      "name": "Navigation Pills",
+      "kind": "nav",
+      "refersTo": "pill",
+      "description": "Top-bar section pills; the current page is solid ink.",
+      "html": "<nav class=\"ds-pills\"><a class=\"ds-pill\" aria-current=\"page\" href=\"#\">Início</a><a class=\"ds-pill\" href=\"#\">Minha carteira</a><a class=\"ds-pill\" href=\"#\">Trilha do Assessor</a></nav>",
+      "css": ".ds-pills { display: inline-flex; gap: 8px; flex-wrap: wrap; padding: 12px; background: #e6e6e3; } .ds-pill { display: inline-flex; align-items: center; height: 40px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(20,20,20,.16); color: #141414; text-decoration: none; font: 400 13px/1 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); transition: background .25s cubic-bezier(0.22, 1, 0.36, 1), color .25s cubic-bezier(0.22, 1, 0.36, 1), border-color .25s cubic-bezier(0.22, 1, 0.36, 1), transform .2s cubic-bezier(0.22, 1, 0.36, 1); } .ds-pill:hover { border-color: #141414; } .ds-pill:active { transform: scale(.96); } .ds-pill:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-pill[aria-current=page] { background: #141414; border-color: #141414; color: #fff; }"
+    },
+    {
+      "name": "Sub-pills",
+      "kind": "chip",
+      "refersTo": "sub-pill",
+      "description": "34px second-level pills; pressed is solid white with an ink stroke, the today count is burnt orange.",
+      "html": "<div class=\"ds-sub\"><button class=\"ds-subpill\" aria-pressed=\"true\">Seg <em class=\"hoje\">4</em></button><button class=\"ds-subpill\" aria-pressed=\"false\">Ter <em>2</em></button><button class=\"ds-subpill\" aria-pressed=\"false\">Qua <em>3</em></button></div>",
+      "css": ".ds-sub { display: flex; gap: 8px; padding: 12px; background: #e6e6e3; } .ds-subpill { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(20,20,20,.16); background: rgba(255,255,255,.35); color: #141414; font: 400 12px/1 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); cursor: pointer; transition: background .25s cubic-bezier(0.22, 1, 0.36, 1), border-color .25s cubic-bezier(0.22, 1, 0.36, 1), transform .2s cubic-bezier(0.22, 1, 0.36, 1); } .ds-subpill:hover { border-color: #141414; } .ds-subpill:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-subpill[aria-pressed=true] { background: #fff; border-color: #141414; } .ds-subpill em { font-style: normal; opacity: .62; } .ds-subpill em.hoje { opacity: 1; color: #c93d18; }"
+    },
+    {
+      "name": "Link Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Borderless white card with icon circle, attention dot, arrow circle and a light number; lifts on hover.",
+      "html": "<div class=\"ds-ground\"><a class=\"ds-card\" href=\"#\"><div class=\"ds-card-hd\"><span class=\"ds-ic\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16\"/><rect width=\"20\" height=\"14\" x=\"2\" y=\"6\" rx=\"2\"/></svg><i class=\"ds-ponto\"></i></span><span class=\"ds-go\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M7 7h10v10\"/><path d=\"M7 17 17 7\"/></svg></span></div><div class=\"ds-card-t\">Clientes sem dossiê<small>Cliente Exemplo e mais 2</small></div><div class=\"ds-num\">3<small>clientes</small></div></a></div>",
+      "css": ".ds-ground { background: #e6e6e3; padding: 20px; } .ds-card { display: flex; flex-direction: column; min-height: 176px; max-width: 300px; padding: 20px 22px 22px; border-radius: 26px; background: #fff; color: #141414; text-decoration: none; font-family: var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); transition: transform .45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .45s cubic-bezier(0.22, 1, 0.36, 1); } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px -24px rgba(0,0,0,.4); } .ds-card:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-card-hd { display: flex; justify-content: space-between; } .ds-ic { position: relative; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #dcdcd8; display: grid; place-items: center; color: #4a4d4b; } .ds-ic svg { width: 15px; height: 15px; } .ds-ponto { position: absolute; top: -1px; right: -1px; width: 11px; height: 11px; border-radius: 50%; background: #ee4c20; box-shadow: 0 0 0 2px #fff; } .ds-go { width: 36px; height: 36px; border-radius: 50%; background: #141414; color: #fff; display: grid; place-items: center; transition: transform .4s cubic-bezier(0.22, 1, 0.36, 1); } .ds-go svg { width: 13px; height: 13px; } .ds-card:hover .ds-go, .ds-card:focus-visible .ds-go { transform: rotate(45deg); } .ds-card-t { margin-top: 18px; font-size: 14px; line-height: 1.3; font-weight: 500; } .ds-card-t small { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; color: #5f625f; } .ds-num { margin-top: auto; padding-top: 18px; font-size: 38px; font-weight: 400; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; } .ds-num small { margin-left: 4px; font-size: 12px; letter-spacing: 0; color: #5f625f; }"
+    },
+    {
+      "name": "Dark Band with Ranked Row",
+      "kind": "custom",
+      "refersTo": "band",
+      "description": "Night band with 32px top radius and paper notch, holding a ranked portfolio row.",
+      "html": "<section class=\"ds-faixa\"><h2>Carteiras</h2><a class=\"ds-rrow\" href=\"#\"><span class=\"ds-pos\">1</span><span><b class=\"ds-nm\">Assessor Exemplo</b><span class=\"ds-nv\">Pleno · 6 clientes</span></span><span class=\"ds-sc\">94<small>pts</small></span><span class=\"ds-track\"><span style=\"width:78%\"></span></span></a></section>",
+      "css": ".ds-faixa { position: relative; padding: 40px 24px 48px; border-radius: 32px 32px 0 0; background: #111110; color: #ededea; font-family: var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); } .ds-faixa::before { content: ''; position: absolute; left: 50%; top: 0; width: 64px; height: 10px; transform: translateX(-50%); border-radius: 0 0 12px 12px; background: #e6e6e3; } .ds-faixa h2 { margin: 0 0 18px; font-size: 26px; font-weight: 400; line-height: 1.1; letter-spacing: -.01em; color: #fff; } .ds-rrow { display: grid; grid-template-columns: 36px minmax(0,1fr) auto minmax(80px,1fr); align-items: center; gap: 18px; padding: 16px 20px; border-radius: 20px; background: #1b1b1a; color: inherit; text-decoration: none; transition: background .2s, transform .3s cubic-bezier(0.22, 1, 0.36, 1); } .ds-rrow:hover { background: #232321; transform: translateY(-2px); } .ds-rrow:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-pos { font-size: 26px; color: #ee4c20; font-variant-numeric: tabular-nums; } .ds-nm { display: block; font-weight: 500; font-size: 15px; color: #fff; } .ds-nv { display: block; margin-top: 3px; font-size: 12px; color: #8d8d88; } .ds-sc { font-size: 30px; color: #fff; font-variant-numeric: tabular-nums; } .ds-sc small { margin-left: 3px; font-size: 12px; color: #8d8d88; } .ds-track { height: 6px; border-radius: 99px; background: #2e2e2b; overflow: hidden; } .ds-track span { display: block; height: 100%; border-radius: 99px; background: #e9e9e6; }"
+    },
+    {
+      "name": "Search Pill and Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Pill search on paper and a white 12px-radius field; focus is ink, never orange.",
+      "html": "<div class=\"ds-ground2\"><label class=\"ds-busca\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg><input type=\"search\" placeholder=\"Buscar cliente\"></label><input class=\"ds-input\" placeholder=\"Objetivo do cliente\"></div>",
+      "css": ".ds-ground2 { display: grid; gap: 12px; padding: 20px; background: #e6e6e3; max-width: 340px; } .ds-busca { display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 16px; border: 1px solid rgba(20,20,20,.16); border-radius: 999px; background: rgba(255,255,255,.55); transition: border-color .2s, background .2s; } .ds-busca:focus-within { border-color: #141414; background: #fff; } .ds-busca svg { width: 15px; height: 15px; color: #5f625f; flex: none; } .ds-busca input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: #141414; font: 400 13px var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); } .ds-busca input::placeholder, .ds-input::placeholder { color: #6f7370; } .ds-input { min-height: 38px; padding: 9px 12px; border: 1px solid #dcdcd8; border-radius: 12px; background: #fff; color: #141414; font: 400 13px/1.3 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); transition: border-color .2s, box-shadow .2s; } .ds-input:hover { border-color: #c4c4bf; } .ds-input:focus { outline: none; border-color: #141414; box-shadow: 0 0 0 3px rgba(20,20,20,.08); }"
+    },
+    {
+      "name": "Choice Chips and Switch",
+      "kind": "chip",
+      "refersTo": "chip-choice",
+      "description": "Multiple choice as 28px pill toggles; on/off as a drawn 38x22 switch.",
+      "html": "<div class=\"ds-escolha\"><button class=\"ds-chip-escolha\" aria-pressed=\"true\">Assessor Exemplo</button><button class=\"ds-chip-escolha\" aria-pressed=\"false\">Assessor Modelo</button><label class=\"ds-sw-l\"><input type=\"checkbox\" class=\"ds-sw\" checked> Ativo</label></div>",
+      "css": ".ds-escolha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 16px; background: #fff; font-family: var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); } .ds-chip-escolha { display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border-radius: 999px; border: 1px solid #dcdcd8; background: #fff; color: #4a4d4b; font-family: inherit; font-size: 12px; font-weight: 400; line-height: 1; cursor: pointer; transition: background .2s cubic-bezier(0.22, 1, 0.36, 1), color .2s cubic-bezier(0.22, 1, 0.36, 1), border-color .2s cubic-bezier(0.22, 1, 0.36, 1), transform .2s cubic-bezier(0.22, 1, 0.36, 1); } .ds-chip-escolha:hover { border-color: #141414; } .ds-chip-escolha:active { transform: scale(.96); } .ds-chip-escolha:focus-visible, .ds-sw:focus-visible { outline: 2px solid #ee4c20; outline-offset: 3px; } .ds-chip-escolha[aria-pressed=true] { background: #141414; border-color: #141414; color: #fff; } .ds-sw-l { display: inline-flex; align-items: center; gap: 10px; margin-left: 12px; font-size: 13.5px; color: #141414; } .ds-sw { appearance: none; -webkit-appearance: none; position: relative; width: 38px; height: 22px; margin: 0; border-radius: 999px; background: #d3d3ce; cursor: pointer; transition: background .25s cubic-bezier(0.22, 1, 0.36, 1); } .ds-sw::before { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1); } .ds-sw:checked { background: #141414; } .ds-sw:checked::before { transform: translateX(16px); }"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Small pill tags on Mist, with tinted ok / wait / alert pairs.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-chip\">Tráfego pago</span><span class=\"ds-chip ds-ok\">Dossiê em dia</span><span class=\"ds-chip ds-wait\">Sem rotina</span><span class=\"ds-chip ds-bad\">Pede atenção</span></div>",
+      "css": ".ds-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 16px; background: #fff; } .ds-chip { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: #f3f3f1; color: #4a4d4b; font: 400 11.5px/1.2 var(--fonte, \"PolySans\", \"Helvetica Neue\", Arial, sans-serif); white-space: nowrap; } .ds-ok { background: #e3f2e9; color: #23633f; } .ds-wait { background: #fdf0dc; color: #8a5a00; } .ds-bad { background: #fbe7e1; color: #a8321a; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Calm Cockpit",
+    "overview": "Trilha Hub is the agency's own \"Saúde dos Clientes\" panel grown into a whole working tool. Every screen answers \"what now?\" in large, light type on a warm paper ground, then pushes reference detail down into a dark rounded band. It is a two-layer dashboard: a light hero layer where the day's routine, who needs attention and the headline number live, and a dark layer below where rankings, weekly calendars and portfolio panels sit.\n\nThe density is Operate-mode but unhurried. White cards carry no border and no resting shadow; they float on paper by tone alone. Numbers are set big and thin rather than bold, so a figure reads as calm information instead of an alarm. Black does the work of emphasis (pressed pills, the arrow circle, primary buttons), and Trilha orange is spent only on state: something needs attention, something is complete, something is today. Behind the top of every screen a blurred brown, orange and amber glow drifts slowly; it is the one atmospheric gesture, and nothing else on the page animates on load.\n\nThis world explicitly replaces a \"dark sidebar plus bordered boxes\" admin look. Navigation is a top bar of pills, never a sidebar; containers are tonal, never boxed in hairlines.",
+    "keyCharacteristics": [
+      "Warm paper ground with a single drifting orange glow behind the top.",
+      "Borderless white cards with a generous 26px radius; depth by tone, shadow only on hover.",
+      "PolySans in two self-hosted faces: Slim for text and big light numbers, Median for small titles, buttons and emphasis.",
+      "Ink-black pills and a black arrow circle as the interactive vocabulary.",
+      "A dark band with a 32px top radius and a notch holds ranked and reference content.",
+      "Orange is state, never decoration."
+    ],
+    "rules": [
+      {
+        "name": "The Orange Is State Rule",
+        "body": "Trilha Orange marks a condition (needs attention, complete, first, today, focused). It is never a heading color, a section fill, a decorative stripe or a brand flourish. If removing the orange would lose no information, it should not be orange.",
+        "section": "colors"
+      },
+      {
+        "name": "The Small Orange Rule",
+        "body": "Orange text under 18px on a light ground uses Burnt Orange Ink, never Trilha Orange.",
+        "section": "colors"
+      },
+      {
+        "name": "The Light Numbers Rule",
+        "body": "Big figures are Slim at weight 400 with negative tracking and tabular digits. Never set a headline number in Median or bold.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Faces Rule",
+        "body": "Large headings are Slim; Median is reserved for small titles, buttons and emphasis. Labels stay sentence case with no letter-spacing; there are no uppercase tracked labels above headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fade-While-Hidden Rule",
+        "body": "Anything that scrolls sideways (wide tables in a card, the anchor rail, phone sub-pill rows) shows a soft fade on the edge only while content remains hidden in that direction, and drops it when the end is reached. A hard cut at the edge must never suggest the content ended.",
+        "section": "layout"
+      },
+      {
+        "name": "The Tone Not Line Rule",
+        "body": "Cards and panels are separated from their ground by tone, never by a border or a resting shadow. Hairlines are for rows and dividers inside a container.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Glow Rule",
+        "body": "The orange glow lives behind the top of the page (and, smaller, inside the dark Coins card). It is never repeated as a decorative blob elsewhere.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** put the screen's answer in the first viewport: h1 and lede left, the big light number or the attention card right.",
+      "**Do** push ranked, weekly and reference content into the dark band (#111110, 32px top radius, notch).",
+      "**Do** use the 36px ink arrow circle as the \"open\" affordance on every link card and panel, rotating 45° on hover.",
+      "**Do** mark \"needs attention\" with the orange dot on a thin icon circle, not with an orange card or orange text.",
+      "**Do** keep every control a 40px pill (34px for sub-pills, 28px for choice chips) and every pressed state either solid ink or, for sub-pills, solid white.",
+      "**Do** fade the edge of any sideways-scrolling row while content remains hidden there.",
+      "**Do** keep motion to state changes (hover lifts, the arrow turn, the sliding switch) on the shared ease-out curve; the glow drift is the only ambient motion, and it is off on phones and under reduced motion."
+    ],
+    "donts": [
+      "**Don't** add a sidebar or boxed, bordered panels; navigation is the top pill bar (and the dock on phones).",
+      "**Don't** use Trilha Orange for headings, fills, stripes or decoration; it is state only, and small orange text on light grounds is Burnt Orange Ink.",
+      "**Don't** set big numbers or headings in Median or bold; they are Slim 400 with negative tracking.",
+      "**Don't** add page-load entrance choreography (staggered fade-ins, slide-ups); content appears at once.",
+      "**Don't** add a serif or a third typeface, and never redraw the Trilha symbol or wordmark in another font.",
+      "**Don't** put uppercase tracked labels or eyebrow lines above headings.",
+      "**Don't** use native multi-select lists or bare browser checkboxes; use pill toggles and the drawn switch.",
+      "**Don't** put client, person or internal data in examples; use neutral placeholders such as \"Cliente Exemplo\"."
+    ]
+  }
+}

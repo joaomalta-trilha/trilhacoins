@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { atualizarCarteiraAction, atualizarUsuarioAction } from "@/app/actions";
 import { atualizarPessoaAction, removerUsuarioAction, restaurarUsuarioAction } from "@/app/hub-actions";
 import type { Papel } from "@/lib/auth/sessao";
+import { RolagemX } from "./rolagem-x";
 
 interface UsuarioEditavel {
   id: string;
@@ -59,8 +60,8 @@ export function AjustesUsuarios({
         </div>
       )}
       <div className="card caixa-tabela">
-        <div className="rolagem-x">
-          <table className="tabela tabela-topo" style={{ minWidth: 1020 }}>
+        <RolagemX>
+          <table className="tabela tabela-topo" style={{ minWidth: 1080 }}>
             <thead>
               <tr>
                 <th>Pessoa</th>
@@ -84,7 +85,7 @@ export function AjustesUsuarios({
               ))}
             </tbody>
           </table>
-        </div>
+        </RolagemX>
       </div>
 
       {removidos.length > 0 && <Removidos removidos={removidos} onAviso={setAviso} />}
@@ -178,7 +179,7 @@ function LinhaUsuario({
         <input
           className="input"
           value={cargo}
-          placeholder="Ex.: Gerente de Performance"
+          placeholder="Ex.: Coordenadora"
           aria-label={`Cargo de ${usuario.email}`}
           disabled={pending}
           onChange={(e) => setCargo(e.target.value)}
@@ -226,30 +227,27 @@ function LinhaUsuario({
           </select>
         )}
         {papel === "coordenacao" && (
-          <div>
-            <select
-              className="input"
-              multiple
-              size={Math.min(4, assessores.length || 1)}
-              value={carteira}
-              disabled={pending}
-              aria-label={`Carteira de ${usuario.email}`}
-              onChange={(e) => {
-                const selecionados = [...e.target.selectedOptions].map((o) => o.value);
-                setCarteira(selecionados);
-                executar(() => atualizarCarteiraAction(usuario.id, selecionados));
-              }}
-              style={{ minWidth: 180 }}
-            >
-              {assessores.map((a) => (
-                <option key={a.id} value={a.id}>
+          <div className="escolha-chips" role="group" aria-label={`Carteira de coordenação de ${usuario.email}`}>
+            {assessores.map((a) => {
+              const marcado = carteira.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  className="chip-escolha"
+                  aria-pressed={marcado}
+                  disabled={pending}
+                  onClick={() => {
+                    const nova = marcado ? carteira.filter((x) => x !== a.id) : [...carteira, a.id];
+                    setCarteira(nova);
+                    executar(() => atualizarCarteiraAction(usuario.id, nova));
+                  }}
+                >
+                  {marcado && <Check strokeWidth={2} aria-hidden="true" />}
                   {a.nome}
-                </option>
-              ))}
-            </select>
-            <div style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 6 }}>
-              Ctrl ou Cmd + clique para escolher vários
-            </div>
+                </button>
+              );
+            })}
           </div>
         )}
         {papel === "diretoria" && <span className="muted">Vê todo mundo</span>}
@@ -259,7 +257,7 @@ function LinhaUsuario({
           className="input"
           value={clickup}
           inputMode="numeric"
-          placeholder="Ex.: 12345678"
+          placeholder="Só números"
           aria-label={`ID do ClickUp de ${usuario.email}`}
           disabled={pending}
           onChange={(e) => setClickup(e.target.value.replace(/\D/g, ""))}
@@ -273,6 +271,8 @@ function LinhaUsuario({
       <td>
         <input
           type="checkbox"
+          role="switch"
+          className="interruptor"
           checked={ativo}
           disabled={pending}
           aria-label={`Acesso de ${usuario.email} ativo`}

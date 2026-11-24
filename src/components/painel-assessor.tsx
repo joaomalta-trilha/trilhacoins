@@ -1,41 +1,6 @@
 import { BASE_MENSAL, ehCheckpoint } from "@/lib/trilhacoins";
 import { fmt, rotuloMes } from "./ui";
 
-export function AnelProgresso({ pct, apto }: { pct: number; apto: boolean }) {
-  const raio = 42;
-  const circunferencia = 2 * Math.PI * raio;
-  const p = Math.max(0, Math.min(100, pct));
-  const preenchido = (p / 100) * circunferencia;
-  return (
-    <svg width={120} height={120} viewBox="0 0 100 100" style={{ flexShrink: 0 }} role="img" aria-label={`${Math.round(p)}% do caminho`}>
-      <circle cx={50} cy={50} r={raio} fill="none" stroke="#2e2e2b" strokeWidth={6} />
-      <circle
-        cx={50}
-        cy={50}
-        r={raio}
-        fill="none"
-        stroke={apto ? "var(--ok)" : "var(--accent)"}
-        strokeWidth={6}
-        strokeDasharray={`${preenchido} ${circunferencia}`}
-        strokeLinecap="round"
-        transform="rotate(-90 50 50)"
-      />
-      <text
-        x={50}
-        y={50}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill="#ffffff"
-        fontSize={22}
-        fontFamily="var(--fonte)"
-        letterSpacing="-0.5"
-      >
-        {Math.round(p)}%
-      </text>
-    </svg>
-  );
-}
-
 export function MetricaEscura({ rotulo, valor, nota }: { rotulo: string; valor: string; nota: string }) {
   return (
     <div className="metrica-escura">
