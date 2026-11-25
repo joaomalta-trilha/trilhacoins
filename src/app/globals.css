@@ -3259,7 +3259,7 @@ fieldset.pergunta > legend + * {
   margin-top: 22px;
 }
 table.tabela-clientes {
-  min-width: 1080px;
+  min-width: 1180px;
 }
 table.tabela-clientes thead th {
   padding-top: 16px;
@@ -3373,6 +3373,53 @@ th[aria-sort="descending"] .ordenar {
   font-size: 11.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+
+/* assessor e coordenação editáveis na linha */
+.celula-select {
+  max-width: 190px;
+  height: 32px;
+  padding: 0 30px 0 13px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23141414' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 11px center / 11px;
+  color: var(--ink-2);
+  font: 400 13px/1 var(--fonte);
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+}
+/* em repouso parece texto; o contorno aparece ao passar o mouse, como numa planilha */
+.celula-select:hover,
+.celula-select:focus-visible {
+  border-color: var(--line);
+  background-color: #fff;
+}
+.celula-select:hover {
+  border-color: var(--ink);
+}
+.celula-select.vazia {
+  color: var(--placeholder);
+}
+.celula-select.vazia.alerta {
+  color: var(--accent-ink);
+}
+.tabela-clientes td.col-coordenacao,
+.tabela-clientes td.col-assessor {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* pendências somam à situação: um grupo à parte, depois de um traço */
+.pendencias {
+  padding-left: 12px;
+  border-left: 1px solid rgba(20, 20, 20, 0.14);
 }
 
 /* status editável na linha */
@@ -3720,4 +3767,55 @@ dialog.dialogo[open]::backdrop {
   .so-celular {
     display: grid;
   }
+}
+
+/* ---------- Vínculo com o ClickUp ---------- */
+table.tabela-vinculo {
+  min-width: 760px;
+}
+table.tabela-vinculo tbody th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+}
+table.tabela-vinculo tbody tr:last-child th {
+  border-bottom: 0;
+}
+table.tabela-vinculo tbody tr:hover th {
+  background: #fafaf8;
+}
+.vinculo-nome {
+  font: 500 13.5px/1.3 var(--fonte);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.vinculo-nome:hover {
+  text-decoration-color: var(--accent);
+}
+.vinculo-inativo {
+  margin-left: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.celula-select.vinculo-select {
+  max-width: 280px;
+}
+.vinculo-situacao {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* contagem dentro de um botão (ex.: "1 sem vínculo") */
+.contagem-btn {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+  font: 400 11.5px/1.2 var(--fonte);
 }

@@ -79,6 +79,10 @@ export async function atualizarClienteAction(id: string, slug: string, patch: hu
       limpo.status = patch.status;
     }
     if (patch.assessorId !== undefined) limpo.assessorId = patch.assessorId === null ? null : uuid(patch.assessorId);
+    if (patch.coordenacaoId !== undefined) limpo.coordenacaoId = patch.coordenacaoId === null ? null : uuid(patch.coordenacaoId);
+    if (patch.clickupClienteOpcao !== undefined) {
+      limpo.clickupClienteOpcao = patch.clickupClienteOpcao === null ? null : uuid(patch.clickupClienteOpcao);
+    }
     for (const campo of ["squad", "pacote", "nicho", "frase", "objetivo"] as const) {
       if (patch[campo] !== undefined) limpo[campo] = textoOuNulo(patch[campo], campo === "frase" || campo === "objetivo" ? 600 : 80);
     }
@@ -100,6 +104,7 @@ export async function atualizarClienteAction(id: string, slug: string, patch: hu
       limpo.links = links;
     }
     await hub.atualizarCliente(uuid(id), limpo);
+    revalidatePath("/clientes/clickup");
     revalidatePath("/clientes");
     revalidatePath("/assessoria");
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);

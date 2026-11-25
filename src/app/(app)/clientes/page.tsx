@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Briefcase, Plus } from "lucide-react";
+import { Briefcase, Link2, Plus } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import {
   type ClienteRow,
@@ -8,6 +8,7 @@ import {
   clientesComDossie,
   coordenacaoPorAssessor,
   diretorioAssessores,
+  diretorioPessoas,
   listarClientes,
   listarTodasLiberacoes,
   obterDossiesDe,
@@ -18,7 +19,8 @@ import { AvisoMigracao, Cena, Ic, PaginaTopo, iniciais } from "@/components/hub/
 import { type CartaoCliente, type Filtro, type GrupoClientes, ListaClientes } from "@/components/hub/lista-clientes";
 import { SeletorVerComo } from "@/components/hub/ver-como";
 import { CentralClientes } from "@/components/hub/central-clientes";
-import { type LinhaCliente, filtroDaTabela } from "@/lib/hub/central-clientes";
+import { type LinhaCliente, pendenciaDaTabela, statusDaTabela } from "@/lib/hub/central-clientes";
+import { listarAssessoresAtivos } from "@/lib/data/repo";
 import { Barra } from "@/components/ui";
 
 export async function generateMetadata() {
@@ -54,10 +56,14 @@ function cartao(c: ClienteRow, comDossie: Set<string>): CartaoCliente {
 /** Quem pede atenção primeiro, depois por nome. */
 const ordem = (a: ClienteRow, b: ClienteRow) => Number(b.pedeAtencao) - Number(a.pedeAtencao) || a.nome.localeCompare(b.nome);
 
-export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filtro?: string; status?: string; pendencia?: string }>;
+}) {
   const ctx = await obterContexto();
   if (!ctx) redirect("/");
-  const { filtro } = await searchParams;
+  const { filtro, status, pendencia } = await searchParams;
   const filtroInicial = FILTROS_VALIDOS.includes(filtro as Filtro) ? (filtro as Filtro) : "todos";
 
   let clientes: ClienteRow[];
@@ -159,13 +165,30 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
   }
 
   // ---------------- experiência da gestão: a planilha de controle ----------------
-  const [coordenacao, dossies] = await Promise.all([
+  const [coordenacaoDoAssessor, dossies, assessoresAtivos, pessoas] = await Promise.all([
     coordenacaoPorAssessor().catch(() => new Map<string, string[]>()),
     obterDossiesDe(clientes.map((c) => c.id)),
+    listarAssessoresAtivos().catch(() => []),
+    diretorioPessoas().catch(() => []),
   ]);
+
+  // com a migration 0010 a coordenação é do cliente; antes dela, vem do assessor
+  const coordenacaoPorCliente = clientes.some((c) => c.coordenacaoId !== undefined);
+  const coordenadoras = pessoas
+    .filter((p) => p.papel === "coordenacao")
+    .map((p) => ({ id: p.id, nome: p.nome }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  const nomeDaPessoa = new Map(pessoas.map((p) => [p.id, p.nome]));
 
   const linhas: LinhaCliente[] = clientes.map((c) => {
     const completude = completudeDoDossie(dossies.get(c.id) ?? null);
+    const coordenacao = coordenacaoPorCliente
+      ? c.coordenacaoId
+        ? [nomeDaPessoa.get(c.coordenacaoId) ?? "Pessoa sem acesso ativo"]
+        : []
+      : c.assessorId
+        ? (coordenacaoDoAssessor.get(c.assessorId) ?? [])
+        : [];
     return {
       id: c.id,
       slug: c.slug,
@@ -174,17 +197,19 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
       pacote: c.pacote?.replace(/\s*\+\s*Audiovisual/i, "") || null,
       pedeAtencao: c.pedeAtencao,
       status: c.status,
+      assessorId: c.assessorId,
       assessor: c.assessorId ? (nomes.get(c.assessorId) ?? "Assessor") : null,
-      coordenacao: c.assessorId ? (coordenacao.get(c.assessorId) ?? []) : [],
+      coordenacaoId: c.coordenacaoId ?? null,
+      coordenacao,
       dossie: { existe: dossies.has(c.id), ...completude },
       pts: c.exigenciaPts,
       criterios: c.exigenciaCriterios,
     };
   });
 
-  const filtroTabela = filtroDaTabela(filtro);
   const ativos = clientes.filter((c) => c.status === "ativo").length;
-  const completos = linhas.filter((l) => l.dossie.faltam.length === 0).length;
+  const completos = linhas.filter((l) => l.status === "ativo" && l.dossie.faltam.length === 0).length;
+  const semClickUp = clientes.filter((c) => c.status !== "saiu" && !c.clickupClienteOpcao).length;
 
   return (
     <Cena>
@@ -197,14 +222,27 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
             <Plus strokeWidth={1.8} aria-hidden="true" />
             Novo cliente
           </Link>
+          <Link href="/clientes/clickup" className="btn btn-secundario">
+            <Link2 strokeWidth={1.6} aria-hidden="true" />
+            Vínculo com o ClickUp
+            {semClickUp > 0 && <span className="contagem-btn">{semClickUp} sem vínculo</span>}
+          </Link>
         </div>
       </PaginaTopo>
-      {coordenacao.size === 0 && ctx.sessao.papel === "diretoria" && (
+      {!coordenacaoPorCliente && coordenacaoDoAssessor.size === 0 && ctx.sessao.papel === "diretoria" && (
         <div className="aviso" style={{ marginTop: 28 }}>
           A coluna Coordenação aparece quando cada coordenadora tem os assessores dela marcados em Usuários.
         </div>
       )}
-      <CentralClientes linhas={linhas} filtroInicial={filtroTabela} />
+      <CentralClientes
+        linhas={linhas}
+        assessores={assessoresAtivos.map((a) => ({ id: a.id, nome: a.nome }))}
+        coordenadoras={coordenadoras}
+        coordenacaoPorCliente={coordenacaoPorCliente}
+        podeTirarAssessor={ctx.sessao.papel === "diretoria"}
+        statusInicial={statusDaTabela(status)}
+        pendenciaInicial={pendenciaDaTabela(pendencia)}
+      />
     </Cena>
   );
 }

@@ -82,6 +82,13 @@ export interface ClienteRow {
   exigenciaPts: number | null;
   /** notas dos sete critérios (migration 0009); null quando só há o total */
   exigenciaCriterios: NotasCriterios | null;
+  /**
+   * Coordenadora do cliente (migration 0010). `undefined` = o banco ainda
+   * não tem a coluna: aí a coordenação continua vindo do assessor.
+   */
+  coordenacaoId: string | null | undefined;
+  /** opção do campo "Clientes" do ClickUp: é por ela que as tarefas chegam ao cliente */
+  clickupClienteOpcao: string | null;
   links: Partial<Record<ChaveLink, string>>;
   dossieAbertoATodos: boolean;
   atualizadoEm: string;
@@ -104,6 +111,9 @@ interface ClienteDB {
   exigencia_pts: number | null;
   /** ausente antes da migration 0009 */
   exigencia_criterios?: unknown;
+  /** ausente antes da migration 0010 */
+  coordenacao_id?: string | null;
+  clickup_cliente_opcao: string | null;
   links: Record<string, unknown> | null;
   dossie_aberto_a_todos: boolean;
   atualizado_em: string;
@@ -138,6 +148,8 @@ function paraCliente(r: ClienteDB): ClienteRow {
     pilotoAssistente: r.piloto_assistente,
     exigenciaPts: r.exigencia_pts,
     exigenciaCriterios: lerNotasCriterios(r.exigencia_criterios),
+    coordenacaoId: r.coordenacao_id,
+    clickupClienteOpcao: r.clickup_cliente_opcao,
     links: linksSeguros(r.links),
     dossieAbertoATodos: r.dossie_aberto_a_todos,
     atualizadoEm: r.atualizado_em,
@@ -206,6 +218,8 @@ export interface PatchCliente {
   pedeAtencao?: boolean;
   exigenciaPts?: number | null;
   exigenciaCriterios?: NotasCriterios | null;
+  coordenacaoId?: string | null;
+  clickupClienteOpcao?: string | null;
   links?: Partial<Record<ChaveLink, string>>;
 }
 
@@ -223,6 +237,8 @@ export async function atualizarCliente(id: string, patch: PatchCliente): Promise
   if (patch.pedeAtencao !== undefined) db.pede_atencao = patch.pedeAtencao;
   if (patch.exigenciaPts !== undefined) db.exigencia_pts = patch.exigenciaPts;
   if (patch.exigenciaCriterios !== undefined) db.exigencia_criterios = patch.exigenciaCriterios;
+  if (patch.coordenacaoId !== undefined) db.coordenacao_id = patch.coordenacaoId;
+  if (patch.clickupClienteOpcao !== undefined) db.clickup_cliente_opcao = patch.clickupClienteOpcao;
   if (patch.links !== undefined) db.links = linksSeguros(patch.links as Record<string, unknown>);
 
   // `.select()` devolve as linhas afetadas: zero linhas = o RLS barrou.
@@ -293,7 +309,8 @@ export interface NovoCliente {
 }
 
 /** "novo" é a página de cadastro: nenhum cliente pode ter esse endereço. */
-const SLUGS_RESERVADOS = new Set(["novo"]);
+// endereços de páginas que moram em /clientes/… e não podem virar cliente
+const SLUGS_RESERVADOS = new Set(["novo", "clickup"]);
 
 export async function criarCliente(novo: NovoCliente): Promise<{ id: string; slug: string }> {
   const supabase = await createClient();
@@ -426,6 +443,25 @@ export const diretorioPessoas = cache(async (): Promise<PessoaDiretorio[]> => {
   return ((data ?? []) as { id: string; nome: string; cargo: string | null; papel: Papel; assessor_id: string | null }[]).map(
     (p) => ({ id: p.id, nome: p.nome, cargo: p.cargo, papel: p.papel, assessorId: p.assessor_id })
   );
+});
+
+// ---------------------------------------------------------------
+// ClickUp: opções do campo "Clientes" (migration 0011)
+// ---------------------------------------------------------------
+
+export interface OpcaoClickUpRow {
+  id: string;
+  nome: string;
+}
+
+/** Opções do campo "Clientes" do ClickUp, em ordem de nome. Só a gestão lê. */
+export const listarOpcoesClickUp = cache(async (): Promise<OpcaoClickUpRow[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("clickup_opcoes_clientes").select("id, nome");
+  lancarSeErro(error);
+  return ((data ?? []) as OpcaoClickUpRow[])
+    .map((o) => ({ id: o.id, nome: o.nome.trim() }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 });
 
 /**

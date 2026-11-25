@@ -1,23 +1,44 @@
 import { describe, expect, it } from "vitest";
-import { filtroDaTabela, passaNoFiltro, resumoDoDossie } from "./central-clientes";
+import {
+  enderecoDaTabela,
+  passaNoStatus,
+  pendenciaDaTabela,
+  resumoDoDossie,
+  statusDaTabela,
+  temPendencia,
+} from "./central-clientes";
 
 const dossie = (respondidas: number, faltam: string[]) => ({ existe: respondidas > 0, respondidas, total: 17, faltam });
 
 describe("planilha de clientes", () => {
-  it("filtro desconhecido no endereço volta para Todos", () => {
-    expect(filtroDaTabela("sem-nota")).toBe("sem-nota");
-    expect(filtroDaTabela("lixo")).toBe("todos");
-    expect(filtroDaTabela(undefined)).toBe("todos");
+  it("abre em Ativos; valor desconhecido no endereço também cai em Ativos", () => {
+    expect(statusDaTabela(undefined)).toBe("ativos");
+    expect(statusDaTabela("lixo")).toBe("ativos");
+    expect(statusDaTabela("todos")).toBe("todos");
+    expect(pendenciaDaTabela("sem-nota")).toBe("sem-nota");
+    expect(pendenciaDaTabela("lixo")).toBeNull();
   });
 
-  it("cada filtro separa o que promete", () => {
-    const linha = { dossie: dossie(16, ["Acesso ao CRM"]), pts: null, status: "pausado" as const };
-    expect(passaNoFiltro("incompletos", linha)).toBe(true);
-    expect(passaNoFiltro("sem-nota", linha)).toBe(true);
-    expect(passaNoFiltro("pausados", linha)).toBe(true);
-    expect(passaNoFiltro("inativos", linha)).toBe(false);
-    expect(passaNoFiltro("incompletos", { ...linha, dossie: dossie(17, []) })).toBe(false);
-    expect(passaNoFiltro("sem-nota", { ...linha, pts: 12 })).toBe(false);
+  it("cada situação mostra só o seu status", () => {
+    expect(passaNoStatus("ativos", { status: "ativo" })).toBe(true);
+    expect(passaNoStatus("ativos", { status: "pausado" })).toBe(false);
+    expect(passaNoStatus("pausados", { status: "pausado" })).toBe(true);
+    expect(passaNoStatus("inativos", { status: "saiu" })).toBe(true);
+    expect(passaNoStatus("todos", { status: "saiu" })).toBe(true);
+  });
+
+  it("as pendências olham o dossiê e a nota de carteira", () => {
+    const linha = { dossie: dossie(16, ["Acesso ao CRM"]), pts: null };
+    expect(temPendencia("incompletos", linha)).toBe(true);
+    expect(temPendencia("sem-nota", linha)).toBe(true);
+    expect(temPendencia("incompletos", { ...linha, dossie: dossie(17, []) })).toBe(false);
+    expect(temPendencia("sem-nota", { ...linha, pts: 12 })).toBe(false);
+  });
+
+  it("o endereço guarda o filtro, sem repetir o padrão", () => {
+    expect(enderecoDaTabela("/clientes", "ativos", null)).toBe("/clientes");
+    expect(enderecoDaTabela("/clientes", "todos", null)).toBe("/clientes?status=todos");
+    expect(enderecoDaTabela("/clientes", "ativos", "sem-nota")).toBe("/clientes?pendencia=sem-nota");
   });
 
   it("a coluna Dossiê diz o que falta, sem lista longa", () => {

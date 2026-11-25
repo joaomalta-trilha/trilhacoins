@@ -13,33 +13,51 @@ export interface LinhaCliente {
   pacote: string | null;
   pedeAtencao: boolean;
   status: StatusLinha;
+  assessorId: string | null;
+  /** nome do assessor, para mostrar e buscar mesmo fora das opções da pessoa logada */
   assessor: string | null;
+  coordenacaoId: string | null;
+  /** nomes de quem coordena (um, quando a coordenação é do cliente) */
   coordenacao: string[];
   dossie: { existe: boolean; respondidas: number; total: number; faltam: string[] };
   pts: number | null;
   criterios: NotasCriterios | null;
 }
 
-export const FILTROS_TABELA = ["todos", "incompletos", "sem-nota", "pausados", "inativos"] as const;
-export type FiltroTabela = (typeof FILTROS_TABELA)[number];
+/** Situação mostrada na planilha. A aba abre em Ativos. */
+export const STATUS_TABELA = ["ativos", "pausados", "inativos", "todos"] as const;
+export type StatusTabela = (typeof STATUS_TABELA)[number];
 
-export function filtroDaTabela(valor: string | undefined): FiltroTabela {
-  return FILTROS_TABELA.includes(valor as FiltroTabela) ? (valor as FiltroTabela) : "todos";
+/** Pendências que se somam à situação ("ativos com dossiê incompleto"). */
+export const PENDENCIAS = ["incompletos", "sem-nota"] as const;
+export type Pendencia = (typeof PENDENCIAS)[number];
+
+export function statusDaTabela(valor: string | undefined): StatusTabela {
+  return STATUS_TABELA.includes(valor as StatusTabela) ? (valor as StatusTabela) : "ativos";
 }
 
-export function passaNoFiltro(f: FiltroTabela, l: Pick<LinhaCliente, "dossie" | "pts" | "status">): boolean {
-  switch (f) {
-    case "incompletos":
-      return l.dossie.faltam.length > 0;
-    case "sem-nota":
-      return l.pts === null;
-    case "pausados":
-      return l.status === "pausado";
-    case "inativos":
-      return l.status === "saiu";
-    default:
-      return true;
-  }
+export function pendenciaDaTabela(valor: string | undefined): Pendencia | null {
+  return PENDENCIAS.includes(valor as Pendencia) ? (valor as Pendencia) : null;
+}
+
+export function passaNoStatus(s: StatusTabela, l: Pick<LinhaCliente, "status">): boolean {
+  if (s === "ativos") return l.status === "ativo";
+  if (s === "pausados") return l.status === "pausado";
+  if (s === "inativos") return l.status === "saiu";
+  return true;
+}
+
+export function temPendencia(p: Pendencia, l: Pick<LinhaCliente, "dossie" | "pts">): boolean {
+  return p === "incompletos" ? l.dossie.faltam.length > 0 : l.pts === null;
+}
+
+/** Endereço da planilha com a situação e a pendência escolhidas (Ativos é o padrão e não aparece). */
+export function enderecoDaTabela(caminho: string, s: StatusTabela, p: Pendencia | null): string {
+  const q = new URLSearchParams();
+  if (s !== "ativos") q.set("status", s);
+  if (p) q.set("pendencia", p);
+  const t = q.toString();
+  return t ? `${caminho}?${t}` : caminho;
 }
 
 /** "Falta Meta e Canais", "Faltam 5 de 17", "Nada respondido ainda". */
