@@ -271,3 +271,102 @@ export function nomeDoMes(mes: string): string {
   const [a, m] = mes.split("-").map(Number);
   return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(a, m - 1, 15)));
 }
+
+// ---------------------------------------------------------------
+// conta por grupo (assessor, squad) e agrupamento da tela da gestão
+// ---------------------------------------------------------------
+
+export interface ContaDoGrupo {
+  /** clientes do grupo com pelo menos uma reunião feita no mês */
+  comReuniao: number;
+  clientes: number;
+  /** reuniões feitas no mês, somando todos os clientes do grupo */
+  reunioes: number;
+}
+
+/**
+ * "4/9 clientes com reunião": quem teve ao menos uma reunião feita no mês.
+ * As reuniões feitas contam uma vez cada, mesmo quando valem para mais de
+ * um cliente (um grupo no ClickUp).
+ */
+export function contarClientesComReuniao(linhas: { realizadas: number; realizadasIds?: string[] }[]): ContaDoGrupo {
+  const comIds = linhas.every((l) => l.realizadasIds);
+  return {
+    comReuniao: linhas.filter((l) => l.realizadas > 0).length,
+    clientes: linhas.length,
+    reunioes: comIds
+      ? new Set(linhas.flatMap((l) => l.realizadasIds ?? [])).size
+      : linhas.reduce((s, l) => s + l.realizadas, 0),
+  };
+}
+
+export interface LinhaAgrupavel {
+  nome: string;
+  assessorId: string | null;
+  assessor: string | null;
+  coordenacaoId: string | null;
+  coordenacao: string | null;
+  /** squad escrito no cadastro do cliente ("Norte") */
+  squad: string | null;
+}
+
+export interface GrupoAssessor<T> {
+  chave: string;
+  nome: string;
+  linhas: T[];
+}
+
+export interface GrupoSquad<T> {
+  chave: string;
+  /** "Squad Norte": o nome que o time usa (o squad mais comum dos clientes) ou o da coordenadora */
+  rotulo: string;
+  coordenacao: string | null;
+  assessores: GrupoAssessor<T>[];
+}
+
+function primeiroNome(nome: string): string {
+  return nome.trim().split(/\s+/)[0] ?? "";
+}
+
+/** O squad mais escrito entre os clientes do grupo; sem nenhum, o primeiro nome da coordenadora. */
+function rotuloDoSquad(linhas: LinhaAgrupavel[], coordenacao: string | null): string {
+  const conta = new Map<string, number>();
+  for (const l of linhas) {
+    const sq = l.squad?.trim();
+    if (sq) conta.set(sq, (conta.get(sq) ?? 0) + 1);
+  }
+  const [maisComum] = [...conta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "pt-BR"));
+  if (maisComum) return `Squad ${maisComum[0]}`;
+  return coordenacao ? `Squad ${primeiroNome(coordenacao)}` : "Sem coordenação";
+}
+
+/**
+ * Squad (a coordenação de cada cliente) → assessor → clientes. Em ordem de
+ * nome; "sem coordenação" e "sem assessor" vão para o fim.
+ */
+export function agruparPorSquad<T extends LinhaAgrupavel>(linhas: T[]): GrupoSquad<T>[] {
+  const porSquad = new Map<string, T[]>();
+  for (const l of linhas) {
+    const k = l.coordenacaoId ?? "";
+    porSquad.set(k, [...(porSquad.get(k) ?? []), l]);
+  }
+  const ultimoSeVazio = (a: string, b: string, na: string, nb: string) =>
+    Number(a === "") - Number(b === "") || na.localeCompare(nb, "pt-BR");
+
+  return [...porSquad.entries()]
+    .map(([chave, doSquad]) => {
+      const coordenacao = doSquad.find((l) => l.coordenacao)?.coordenacao ?? null;
+      const porAssessor = new Map<string, T[]>();
+      for (const l of doSquad) {
+        const k = l.assessorId ?? "";
+        porAssessor.set(k, [...(porAssessor.get(k) ?? []), l]);
+      }
+      const assessores = [...porAssessor.entries()]
+        .map(([k, ls]) => ({ chave: k || "sem-assessor", nome: ls.find((l) => l.assessor)?.assessor ?? "Sem assessor", linhas: ls, vazio: k }))
+        .sort((a, b) => ultimoSeVazio(a.vazio, b.vazio, a.nome, b.nome))
+        .map(({ chave: c, nome, linhas: ls }) => ({ chave: c, nome, linhas: ls }));
+      return { chave: chave || "sem-coordenacao", rotulo: chave ? rotuloDoSquad(doSquad, coordenacao) : "Sem coordenação", coordenacao, assessores, vazio: chave };
+    })
+    .sort((a, b) => ultimoSeVazio(a.vazio, b.vazio, a.rotulo, b.rotulo))
+    .map(({ chave, rotulo, coordenacao, assessores }) => ({ chave, rotulo, coordenacao, assessores }));
+}

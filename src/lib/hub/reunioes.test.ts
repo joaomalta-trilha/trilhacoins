@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  agruparPorSquad,
+  contarClientesComReuniao,
   type Reuniao,
   type TarefaClickUp,
   diaDe,
@@ -180,5 +182,57 @@ describe("datas para mostrar", () => {
   it("nome do mês por extenso", () => {
     expect(nomeDoMes("2026-11")).toBe("novembro de 2026");
     expect(nomeDoMes("2027-01")).toBe("janeiro de 2027");
+  });
+});
+
+describe("conta e grupos da tela da gestão", () => {
+  // squads, pessoas e clientes fictícios
+  const linha = (nome: string, assessorId: string | null, coordenacaoId: string | null, squad: string | null, realizadas = 0) => ({
+    nome,
+    assessorId,
+    assessor: assessorId ? `Assessor ${assessorId}` : null,
+    coordenacaoId,
+    coordenacao: coordenacaoId ? `Coordenadora ${coordenacaoId} Silva` : null,
+    squad,
+    realizadas,
+  });
+
+  it("4/9 clientes com reunião: conta quem teve ao menos uma, e soma as reuniões", () => {
+    const ls = [linha("A", "x", "c1", null, 3), linha("B", "x", "c1", null, 0), linha("C", "x", "c1", null, 2)];
+    expect(contarClientesComReuniao(ls)).toEqual({ comReuniao: 2, clientes: 3, reunioes: 5 });
+    expect(contarClientesComReuniao([])).toEqual({ comReuniao: 0, clientes: 0, reunioes: 0 });
+  });
+
+  it("reunião de um grupo vale para cada cliente, mas conta uma vez no total", () => {
+    const grupo = [
+      { realizadas: 2, realizadasIds: ["r1", "r2"] },
+      { realizadas: 2, realizadasIds: ["r1", "r2"] },
+      { realizadas: 1, realizadasIds: ["r3"] },
+    ];
+    expect(contarClientesComReuniao(grupo)).toEqual({ comReuniao: 3, clientes: 3, reunioes: 3 });
+  });
+
+  it("separa por squad (a coordenação do cliente) e, dentro, por assessor", () => {
+    const grupos = agruparPorSquad([
+      linha("Cliente 1", "b", "c2", "Sul"),
+      linha("Cliente 2", "a", "c1", "Norte"),
+      linha("Cliente 3", "a", "c1", "Norte"),
+      linha("Cliente 4", "c", "c1", "Norte"),
+      linha("Cliente 5", null, "c1", null),
+      linha("Cliente 6", "d", null, null),
+    ]);
+    expect(grupos.map((g) => g.rotulo)).toEqual(["Squad Norte", "Squad Sul", "Sem coordenação"]);
+    expect(grupos[0].coordenacao).toBe("Coordenadora c1 Silva");
+    expect(grupos[0].assessores.map((a) => [a.nome, a.linhas.length])).toEqual([
+      ["Assessor a", 2],
+      ["Assessor c", 1],
+      ["Sem assessor", 1],
+    ]);
+  });
+
+  it("o nome do squad é o mais escrito nos clientes; sem nenhum, o primeiro nome da coordenadora", () => {
+    const misto = agruparPorSquad([linha("1", "a", "c1", "Norte"), linha("2", "a", "c1", "Norte"), linha("3", "a", "c1", "Leste")]);
+    expect(misto[0].rotulo).toBe("Squad Norte");
+    expect(agruparPorSquad([linha("1", "a", "c9", null)])[0].rotulo).toBe("Squad Coordenadora");
   });
 });

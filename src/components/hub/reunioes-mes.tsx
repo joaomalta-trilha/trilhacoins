@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { ExternalLink, RefreshCw, Search } from "lucide-react";
 import { atualizarReunioesAction } from "@/app/hub-actions";
-import { type SituacaoDoMes, rotuloDaData } from "@/lib/hub/reunioes";
+import {
+  type ContaDoGrupo,
+  type GrupoSquad,
+  type SituacaoDoMes,
+  agruparPorSquad,
+  contarClientesComReuniao,
+  rotuloDaData,
+} from "@/lib/hub/reunioes";
 import { normalizarNome } from "@/lib/hub/texto";
 import { RolagemX } from "@/components/rolagem-x";
 
@@ -19,14 +26,20 @@ export interface LinhaReuniao {
   slug: string;
   nome: string;
   iniciais: string;
+  assessorId: string | null;
   assessor: string | null;
+  coordenacaoId: string | null;
   coordenacao: string | null;
+  /** squad escrito no cadastro do cliente */
+  squad: string | null;
   /** cliente ligado a uma opção do campo Clientes do ClickUp */
   ligado: boolean;
   /** frequência combinada no dossiê ("Mensal") */
   frequencia: string | null;
   esperadas: number | null;
   realizadas: number;
+  /** IDs das reuniões feitas no mês (a de um grupo aparece em mais de um cliente) */
+  realizadasIds: string[];
   agendadas: number;
   vencidas: number;
   proxima: ReuniaoCurta | null;
@@ -47,8 +60,16 @@ const ROTULO_SITUACAO: Record<SituacaoDoMes, { texto: string; tom: string }> = {
 // quem pede ação primeiro
 const PESO: Record<SituacaoDoMes, number> = { vencida: 0, falta: 1, agendada: 2, "sem-previsao": 3, "em-dia": 4 };
 
+const COLUNAS = ["Cliente", "No mês", "Próxima", "Última", "Situação"];
+
 function pedeAtencao(l: LinhaReuniao): boolean {
   return l.ligado && (l.situacao === "vencida" || l.situacao === "falta");
+}
+
+function ordenar(a: LinhaReuniao, b: LinhaReuniao): number {
+  return (
+    Number(b.ligado) - Number(a.ligado) || PESO[a.situacao] - PESO[b.situacao] || a.nome.localeCompare(b.nome, "pt-BR")
+  );
 }
 
 function Quando({ r, vazio }: { r: ReuniaoCurta | null; vazio: string }) {
@@ -64,7 +85,7 @@ function Quando({ r, vazio }: { r: ReuniaoCurta | null; vazio: string }) {
   );
 }
 
-/** Pontos do mês: cheio = realizada, contorno = agendada, laranja = vencida, tracejado = falta marcar. */
+/** Pontos do mês: cheio = realizada, laranja = vencida, contorno = agendada, tracejado = falta marcar. */
 function Pontos({ l }: { l: LinhaReuniao }) {
   const faltam = Math.max(0, (l.esperadas ?? 0) - l.realizadas - l.agendadas - l.vencidas);
   const pontos = [
@@ -83,9 +104,86 @@ function Pontos({ l }: { l: LinhaReuniao }) {
   );
 }
 
+/** "4/9 clientes com reunião", com a barrinha. */
+export function ContaClientes({ conta, forte = false }: { conta: ContaDoGrupo; forte?: boolean }) {
+  const pct = conta.clientes ? Math.round((conta.comReuniao / conta.clientes) * 100) : 0;
+  return (
+    <span className={`conta-clientes${forte ? " forte" : ""}`}>
+      <b>
+        {conta.comReuniao}/{conta.clientes}
+      </b>{" "}
+      {conta.clientes === 1 ? "cliente" : "clientes"} com reunião
+      <span className="conta-barra" aria-hidden="true">
+        <i style={{ width: `${pct}%` }} />
+      </span>
+      <small>
+        {conta.reunioes} {conta.reunioes === 1 ? "reunião feita" : "reuniões feitas"}
+      </small>
+    </span>
+  );
+}
+
+function LinhaCliente({ l }: { l: LinhaReuniao }) {
+  const sit = ROTULO_SITUACAO[l.situacao];
+  return (
+    <tr>
+      <th scope="row">
+        <Link href={`/clientes/${l.slug}`} className="cliente-cel">
+          <span className="ic" aria-hidden="true">
+            {l.iniciais}
+          </span>
+          <span className="cliente-nome">
+            <b>{l.nome}</b>
+            <small>{l.frequencia ? `Reunião ${l.frequencia.toLowerCase()}` : "Frequência a combinar"}</small>
+          </span>
+        </Link>
+      </th>
+      <td>
+        {l.ligado ? (
+          <span className="no-mes">
+            <b>
+              {l.realizadas}
+              {l.esperadas ? <small> de {l.esperadas}</small> : null}
+            </b>
+            <Pontos l={l} />
+          </span>
+        ) : (
+          <span className="vazio-cel">—</span>
+        )}
+      </td>
+      <td>{l.ligado ? <Quando r={l.proxima} vazio="Nada marcado" /> : <span className="vazio-cel">—</span>}</td>
+      <td>{l.ligado ? <Quando r={l.ultima} vazio="Sem registro" /> : <span className="vazio-cel">—</span>}</td>
+      <td>
+        {l.ligado ? (
+          <span className={`chip ${sit.tom}`}>{sit.texto}</span>
+        ) : (
+          <Link href="/clientes/clickup" className="chip chip-atencao">
+            Sem vínculo com o ClickUp
+          </Link>
+        )}
+      </td>
+    </tr>
+  );
+}
+
+function Cabecalho() {
+  return (
+    <thead>
+      <tr>
+        {COLUNAS.map((c) => (
+          <th key={c} scope="col">
+            {c}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
+}
+
 /**
- * Reuniões do mês, cliente por cliente: quantas aconteceram contra as
- * esperadas pela frequência do dossiê, a próxima marcada e a última feita.
+ * Reuniões do mês. Na gestão, os clientes vêm por squad e, dentro, por
+ * assessor, cada grupo com a conta "clientes com reunião". O assessor vê
+ * só a carteira dele, numa tabela.
  */
 export function ReunioesDoMes({
   linhas,
@@ -93,7 +191,7 @@ export function ReunioesDoMes({
   lidasEm,
 }: {
   linhas: LinhaReuniao[];
-  /** gestão vê assessor e coordenação; o assessor, só a carteira dele */
+  /** gestão vê squads e assessores; o assessor, só a carteira dele */
   gestao: boolean;
   lidasEm: string | null;
 }) {
@@ -110,28 +208,19 @@ export function ReunioesDoMes({
       atencao: linhas.filter(pedeAtencao).length,
       "em-dia": linhas.filter((l) => l.ligado && l.situacao === "em-dia").length,
     }),
-    [linhas]
+    [linhas],
   );
 
-  const visiveis = useMemo(
-    () =>
-      linhas
-        .filter((l) => (filtro === "atencao" ? pedeAtencao(l) : filtro === "em-dia" ? l.ligado && l.situacao === "em-dia" : true))
-        .filter(
-          (l) =>
-            !termo ||
-            normalizarNome(l.nome).includes(termo) ||
-            normalizarNome(l.assessor ?? "").includes(termo) ||
-            normalizarNome(l.coordenacao ?? "").includes(termo)
-        )
-        .sort(
-          (a, b) =>
-            Number(b.ligado) - Number(a.ligado) ||
-            PESO[a.situacao] - PESO[b.situacao] ||
-            a.nome.localeCompare(b.nome, "pt-BR")
-        ),
-    [linhas, filtro, termo]
-  );
+  const passa = (l: LinhaReuniao) =>
+    (filtro === "atencao" ? pedeAtencao(l) : filtro === "em-dia" ? l.ligado && l.situacao === "em-dia" : true) &&
+    (!termo ||
+      normalizarNome(l.nome).includes(termo) ||
+      normalizarNome(l.assessor ?? "").includes(termo) ||
+      normalizarNome(l.coordenacao ?? "").includes(termo));
+
+  // a conta de cada grupo é sempre da carteira inteira; o filtro só esconde linhas
+  const grupos: GrupoSquad<LinhaReuniao>[] = useMemo(() => (gestao ? agruparPorSquad(linhas) : []), [gestao, linhas]);
+  const visiveis = linhas.filter(passa).sort(ordenar);
 
   function atualizar() {
     setErro(null);
@@ -146,8 +235,17 @@ export function ReunioesDoMes({
   }
 
   const horaLida = lidasEm
-    ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Maceio", hour: "2-digit", minute: "2-digit" }).format(new Date(lidasEm))
+    ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Maceio", hour: "2-digit", minute: "2-digit" }).format(
+        new Date(lidasEm),
+      )
     : null;
+
+  const vazio = (
+    <div className="vazio central-vazio">
+      <b>Nenhum cliente nesse filtro</b>
+      <p>{termo ? "Confira o nome digitado." : "Volte para Todos para ver a lista inteira."}</p>
+    </div>
+  );
 
   return (
     <div className="reunioes-mes">
@@ -187,78 +285,69 @@ export function ReunioesDoMes({
         </div>
       </div>
 
-      <div className="card caixa-tabela central-caixa">
-        <RolagemX>
-          <table className="tabela tabela-reunioes">
-            <caption className="sr-only">Reuniões do mês por cliente: realizadas, esperadas, próxima e última.</caption>
-            <thead>
-              <tr>
-                <th scope="col">Cliente</th>
-                {gestao && <th scope="col">Assessor</th>}
-                {gestao && <th scope="col">Coordenação</th>}
-                <th scope="col">No mês</th>
-                <th scope="col">Próxima</th>
-                <th scope="col">Última</th>
-                <th scope="col">Situação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visiveis.map((l) => {
-                const sit = ROTULO_SITUACAO[l.situacao];
-                return (
-                  <tr key={l.id}>
-                    <th scope="row">
-                      <Link href={`/clientes/${l.slug}`} className="cliente-cel">
-                        <span className="ic" aria-hidden="true">
-                          {l.iniciais}
-                        </span>
-                        <span className="cliente-nome">
-                          <b>{l.nome}</b>
-                          <small>{l.frequencia ? `Reunião ${l.frequencia.toLowerCase()}` : "Frequência a combinar"}</small>
-                        </span>
-                      </Link>
-                    </th>
-                    {gestao && <td className="col-pessoa">{l.assessor ?? <span className="vazio-cel">Sem assessor</span>}</td>}
-                    {gestao && <td className="col-pessoa">{l.coordenacao ?? <span className="vazio-cel">—</span>}</td>}
-                    <td>
-                      {l.ligado ? (
-                        <span className="no-mes">
-                          <b>
-                            {l.realizadas}
-                            {l.esperadas ? <small> de {l.esperadas}</small> : null}
-                          </b>
-                          <Pontos l={l} />
-                        </span>
-                      ) : (
-                        <span className="vazio-cel">—</span>
-                      )}
-                    </td>
-                    <td>{l.ligado ? <Quando r={l.proxima} vazio="Nada marcado" /> : <span className="vazio-cel">—</span>}</td>
-                    <td>{l.ligado ? <Quando r={l.ultima} vazio="Sem registro" /> : <span className="vazio-cel">—</span>}</td>
-                    <td>
-                      {l.ligado ? (
-                        <span className={`chip ${sit.tom}`}>{sit.texto}</span>
-                      ) : gestao ? (
-                        <Link href="/clientes/clickup" className="chip chip-atencao">
-                          Sem vínculo com o ClickUp
-                        </Link>
-                      ) : (
-                        <span className="chip">Sem vínculo com o ClickUp</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </RolagemX>
-        {visiveis.length === 0 && (
-          <div className="vazio central-vazio">
-            <b>Nenhum cliente nesse filtro</b>
-            <p>{termo ? "Confira o nome digitado." : "Volte para Todos para ver a lista inteira."}</p>
-          </div>
-        )}
-      </div>
+      {!gestao ? (
+        <div className="card caixa-tabela central-caixa">
+          <RolagemX>
+            <table className="tabela tabela-reunioes">
+              <caption className="sr-only">
+                Reuniões do mês por cliente: realizadas, esperadas, próxima e última.
+              </caption>
+              <Cabecalho />
+              <tbody>
+                {visiveis.map((l) => (
+                  <LinhaCliente key={l.id} l={l} />
+                ))}
+              </tbody>
+            </table>
+          </RolagemX>
+          {visiveis.length === 0 && vazio}
+        </div>
+      ) : (
+        <>
+          {grupos.map((sq) => {
+            const assessores = sq.assessores
+              .map((a) => ({ ...a, visiveis: a.linhas.filter(passa).sort(ordenar) }))
+              .filter((a) => a.visiveis.length > 0);
+            if (!assessores.length) return null;
+            const doSquad = sq.assessores.flatMap((a) => a.linhas);
+            return (
+              <section key={sq.chave} className="squad" aria-labelledby={`sq-${sq.chave}`}>
+                <div className="squad-cab">
+                  <div>
+                    <h2 id={`sq-${sq.chave}`}>{sq.rotulo}</h2>
+                    {sq.coordenacao && <p>Coordenação de {sq.coordenacao}</p>}
+                  </div>
+                  <ContaClientes conta={contarClientesComReuniao(doSquad)} forte />
+                </div>
+                <div className="card caixa-tabela">
+                  <RolagemX>
+                    <table className="tabela tabela-reunioes agrupada">
+                      <caption className="sr-only">{sq.rotulo}: reuniões do mês por assessor e cliente.</caption>
+                      <Cabecalho />
+                      {assessores.map((a) => (
+                        <tbody key={a.chave}>
+                          <tr className="grupo-assessor">
+                            <th scope="rowgroup" colSpan={COLUNAS.length}>
+                              <div className="grupo-assessor-cab">
+                                <span className="grupo-assessor-nome">{a.nome}</span>
+                                <ContaClientes conta={contarClientesComReuniao(a.linhas)} />
+                              </div>
+                            </th>
+                          </tr>
+                          {a.visiveis.map((l) => (
+                            <LinhaCliente key={l.id} l={l} />
+                          ))}
+                        </tbody>
+                      ))}
+                    </table>
+                  </RolagemX>
+                </div>
+              </section>
+            );
+          })}
+          {visiveis.length === 0 && <div className="central-caixa">{vazio}</div>}
+        </>
+      )}
     </div>
   );
 }
