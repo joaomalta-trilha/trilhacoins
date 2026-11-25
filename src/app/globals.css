@@ -3237,3 +3237,487 @@ fieldset.pergunta > legend + * {
     padding: 20px 18px;
   }
 }
+
+/* ---------- texto só para leitor de tela ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Clientes: a planilha de controle ---------- */
+.central-aviso {
+  margin-top: 18px;
+}
+.central-caixa {
+  margin-top: 22px;
+}
+table.tabela-clientes {
+  min-width: 1080px;
+}
+table.tabela-clientes thead th {
+  padding-top: 16px;
+}
+table.tabela-clientes tbody th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+table.tabela-clientes tbody tr:last-child th {
+  border-bottom: 0;
+}
+table.tabela-clientes tbody tr:hover th {
+  background: #fafaf8;
+}
+table.tabela-clientes td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.tabela-clientes .col-cliente {
+  min-width: 250px;
+}
+.tabela-clientes .col-dossie {
+  min-width: 300px;
+}
+.tabela-clientes .col-status,
+.tabela-clientes .col-carteira {
+  white-space: nowrap;
+}
+.tabela-clientes td.col-coordenacao,
+.tabela-clientes td.col-assessor {
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* cabeçalho que ordena */
+.ordenar {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.ordenar:hover,
+th[aria-sort="ascending"] .ordenar,
+th[aria-sort="descending"] .ordenar {
+  color: var(--ink);
+}
+.ordenar svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* célula do cliente: círculo das iniciais + nome */
+.cliente-cel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.cliente-nome {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.cliente-nome b {
+  font: 500 13.5px/1.3 var(--fonte);
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.cliente-cel:hover .cliente-nome b {
+  text-decoration-color: var(--accent);
+}
+.cliente-nome small {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.vazio-cel {
+  color: var(--placeholder);
+}
+.vazio-cel.alerta {
+  color: var(--accent-ink);
+}
+
+/* dossiê: completo ou não, e o atalho para o formulário */
+.dossie-cel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.dossie-estado {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+  min-width: 0;
+}
+.dossie-estado small {
+  max-width: 24ch;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* status editável na linha */
+.status-cel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.status-cel i {
+  position: absolute;
+  left: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  pointer-events: none;
+}
+.status-pausado i {
+  background: var(--warn);
+}
+.status-saiu i {
+  background: #b4b4af;
+}
+.status-select {
+  height: 32px;
+  padding: 0 30px 0 27px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m3 4.5 3 3 3-3' fill='none' stroke='%23141414' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E")
+    no-repeat right 11px center / 11px;
+  color: var(--ink);
+  font: 400 12.5px/1 var(--fonte);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.status-select:hover {
+  border-color: var(--ink);
+}
+
+/* nota de carteira: abre o pop-up dos critérios */
+.nota-cel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  height: 32px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: 400 12.5px/1 var(--fonte);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    transform 0.2s var(--ease);
+}
+.nota-cel:hover {
+  border-color: var(--ink);
+}
+.nota-cel:active {
+  transform: scale(0.97);
+}
+.nota-cel.sem-nota {
+  border-style: dashed;
+  border-color: #c4c4bf;
+}
+.nota-cel.sem-nota:hover {
+  border-style: solid;
+  border-color: var(--ink);
+}
+.nota-pts {
+  color: var(--ink-2);
+}
+.nota-detalhe {
+  display: block;
+  margin: 5px 0 0 14px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* cliente inativo: a linha fica, mais apagada */
+.linha-inativa .cliente-nome b,
+.linha-inativa td.col-coordenacao,
+.linha-inativa td.col-assessor {
+  color: var(--muted);
+}
+.linha-inativa .ic {
+  opacity: 0.55;
+}
+.central-vazio {
+  margin: 0 22px 22px;
+}
+
+/* ---------- pop-up (dialog nativo) ---------- */
+html:has(dialog.dialogo[open]) {
+  overflow: hidden;
+}
+dialog.dialogo {
+  width: min(860px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  margin: auto; /* o reset zera a margem; é ela que centraliza o modal */
+  padding: 0;
+  border: 0;
+  border-radius: var(--r);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: var(--sombra-pop);
+  overflow: hidden;
+}
+dialog.dialogo::backdrop {
+  background: rgba(17, 17, 16, 0.42);
+}
+dialog.dialogo[open] {
+  animation: dialogo-entra 0.26s var(--ease);
+}
+dialog.dialogo[open]::backdrop {
+  animation: dialogo-fundo 0.26s var(--ease);
+}
+@keyframes dialogo-entra {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+@keyframes dialogo-fundo {
+  from {
+    opacity: 0;
+  }
+}
+.dialogo-form {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  max-height: calc(100dvh - 48px);
+}
+.dialogo-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 28px 20px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.dialogo-topo h2 {
+  font: 400 26px/1.15 var(--fonte);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.dialogo-topo p {
+  max-width: 62ch;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.dialogo-rolagem {
+  padding: 4px 28px 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.dialogo-rolagem > .aviso {
+  margin: 18px 0 2px;
+  background: var(--soft); /* o aviso é branco; dentro do pop-up branco, ganha tom */
+}
+.dialogo-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  padding: 16px 28px 20px;
+  border-top: 1px solid var(--line-soft);
+}
+.dialogo-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* um critério da carteira: nome, a escala de 1 ao peso e as três referências */
+.criterio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 24px;
+  margin: 0;
+  padding: 20px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  min-width: 0;
+}
+.criterio:last-child {
+  border-bottom: 0;
+}
+.criterio-cab {
+  float: left; /* tira a legenda do lugar especial do fieldset e a põe no grid */
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 0;
+}
+.criterio-nome {
+  font: 500 15px/1.3 var(--fonte);
+}
+.criterio-peso {
+  font-size: 12px;
+  color: var(--muted);
+}
+.criterio-notas {
+  display: flex;
+  gap: 6px;
+}
+.nota-opcao {
+  position: relative;
+  display: block;
+}
+.nota-opcao input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.nota-opcao span {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink-2);
+  font: 500 14px/1 var(--fonte);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background 0.18s var(--ease),
+    border-color 0.18s,
+    color 0.18s,
+    transform 0.18s var(--ease);
+}
+.nota-opcao:hover span {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.nota-opcao input:checked + span {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+.nota-opcao input:active + span {
+  transform: scale(0.94);
+}
+.nota-opcao input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.criterio-refs {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.criterio-refs li {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.criterio-refs b {
+  display: block;
+  margin-bottom: 3px;
+  font: 500 11.5px/1.3 var(--fonte);
+  color: var(--ink-2);
+}
+
+/* soma ao vivo no rodapé do pop-up */
+.total-exigencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.total-exigencia > b {
+  font: 400 36px/1 var(--fonte);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.total-rotulo {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.total-rotulo .estrelas {
+  margin-left: 4px;
+}
+.total-rotulo small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  dialog.dialogo {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .dialogo-form {
+    max-height: calc(100dvh - 16px);
+  }
+  .dialogo-topo,
+  .dialogo-rodape {
+    padding-inline: 18px;
+  }
+  .dialogo-rolagem {
+    padding-inline: 18px;
+  }
+  .criterio {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .criterio-refs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+/* só no celular (a doca aparece abaixo de 900px) */
+.so-celular {
+  display: none;
+}
+@media (max-width: 899px) {
+  .so-celular {
+    display: grid;
+  }
+}

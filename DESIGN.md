@@ -369,6 +369,10 @@ A Night section with 32px top corners and the paper notch, 56px top padding. Ins
 
 ### Tables
 Inside a zero-padding card: Slim 11.5px muted heads over a Hairline, 13px tabular rows divided by Soft Hairlines, 22px outer cell padding, a barely-there row hover (#fafaf8). Wide tables scroll inside RolagemX with the right-edge fade.
+- **Control table (Clientes):** the row header is the client (icon circle with initials + name over a muted sub-line); heads are buttons that sort, with a 12px arrow on the active one and `aria-sort`. Controls inside rows stay 32px pills: the status select carries a leading state dot (Confirm Green, Amber, grey), the score cell is a pill button (stars + points; dashed when empty) that opens the dialog. Empty cells say what is missing in Placeholder grey ("Sem vínculo"); "Sem assessor" goes Burnt Orange Ink. An inactive client stays in the table, muted.
+
+### Dialog
+The native `<dialog>` as a modal, only when the task needs protected focus (scoring a client's seven criteria). White, 26px radius, popover shadow, centered, up to 860px wide and the viewport height minus 48px; the backdrop is Night at 42%. Three rows: a head with the 26px title, the explanation and a close circle; a scrolling body; a footer with the live result on the left and Cancel + the primary action on the right. Choice scales are 38px number circles (white with a Hairline; checked is solid ink). Opens with a 0.26s rise and fade; Esc, Cancel and a backdrop click close without saving. Below 640px it takes the width minus 16px and the rows stack.
 
 ## Do's and Don'ts
 

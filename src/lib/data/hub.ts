@@ -5,6 +5,7 @@ import { obterUsuarioAutenticado } from "@/lib/auth/sessao";
 import type { Papel } from "@/lib/auth/sessao";
 import { createClient } from "@/lib/supabase/server";
 import { slugificar } from "@/lib/hub/texto";
+import { type NotasCriterios, lerNotasCriterios } from "@/lib/hub/exigencia";
 
 // Camada de dados do Hub (clientes, dossiês, liberações, conteúdos e
 // diretório de pessoas). Mesma regra do repo do Coins: quem decide o
@@ -79,6 +80,8 @@ export interface ClienteRow {
   pedeAtencao: boolean;
   pilotoAssistente: boolean;
   exigenciaPts: number | null;
+  /** notas dos sete critérios (migration 0009); null quando só há o total */
+  exigenciaCriterios: NotasCriterios | null;
   links: Partial<Record<ChaveLink, string>>;
   dossieAbertoATodos: boolean;
   atualizadoEm: string;
@@ -99,6 +102,8 @@ interface ClienteDB {
   pede_atencao: boolean;
   piloto_assistente: boolean;
   exigencia_pts: number | null;
+  /** ausente antes da migration 0009 */
+  exigencia_criterios?: unknown;
   links: Record<string, unknown> | null;
   dossie_aberto_a_todos: boolean;
   atualizado_em: string;
@@ -132,6 +137,7 @@ function paraCliente(r: ClienteDB): ClienteRow {
     pedeAtencao: r.pede_atencao,
     pilotoAssistente: r.piloto_assistente,
     exigenciaPts: r.exigencia_pts,
+    exigenciaCriterios: lerNotasCriterios(r.exigencia_criterios),
     links: linksSeguros(r.links),
     dossieAbertoATodos: r.dossie_aberto_a_todos,
     atualizadoEm: r.atualizado_em,
@@ -199,6 +205,7 @@ export interface PatchCliente {
   objetivo?: string | null;
   pedeAtencao?: boolean;
   exigenciaPts?: number | null;
+  exigenciaCriterios?: NotasCriterios | null;
   links?: Partial<Record<ChaveLink, string>>;
 }
 
@@ -215,6 +222,7 @@ export async function atualizarCliente(id: string, patch: PatchCliente): Promise
   if (patch.objetivo !== undefined) db.objetivo = patch.objetivo;
   if (patch.pedeAtencao !== undefined) db.pede_atencao = patch.pedeAtencao;
   if (patch.exigenciaPts !== undefined) db.exigencia_pts = patch.exigenciaPts;
+  if (patch.exigenciaCriterios !== undefined) db.exigencia_criterios = patch.exigenciaCriterios;
   if (patch.links !== undefined) db.links = linksSeguros(patch.links as Record<string, unknown>);
 
   // `.select()` devolve as linhas afetadas: zero linhas = o RLS barrou.
@@ -222,6 +230,34 @@ export async function atualizarCliente(id: string, patch: PatchCliente): Promise
   lancarSeErro(error);
   if (!data?.length) throw new Error("Sem permissão para editar este cliente.");
   await registrarLog(supabase, { acao: "atualizar_cliente", entidade: "cliente", entidadeId: id, valorNovo: patch });
+}
+
+/**
+ * Grava a nota de exigência pelos sete critérios (total + notas). O log
+ * guarda a nota anterior e a nova: é o histórico de revisões da carteira.
+ */
+export async function avaliarExigencia(id: string, notas: NotasCriterios, pts: number): Promise<void> {
+  const supabase = await createClient();
+  // nota anterior só para o log; se a leitura falhar, a gravação decide
+  const { data: antes } = await supabase
+    .from("clientes")
+    .select("exigencia_pts, exigencia_criterios")
+    .eq("id", id)
+    .maybeSingle<{ exigencia_pts: number | null; exigencia_criterios: unknown }>();
+  const { data, error } = await supabase
+    .from("clientes")
+    .update({ exigencia_pts: pts, exigencia_criterios: notas })
+    .eq("id", id)
+    .select("id");
+  lancarSeErro(error);
+  if (!data?.length) throw new Error("Sem permissão para avaliar este cliente.");
+  await registrarLog(supabase, {
+    acao: "avaliar_exigencia",
+    entidade: "cliente",
+    entidadeId: id,
+    valorAnterior: antes ? { pts: antes.exigencia_pts, criterios: antes.exigencia_criterios ?? null } : null,
+    valorNovo: { pts, criterios: notas },
+  });
 }
 
 export async function salvarDossie(clienteId: string, conteudoMd: string): Promise<void> {
@@ -390,6 +426,27 @@ export const diretorioPessoas = cache(async (): Promise<PessoaDiretorio[]> => {
   return ((data ?? []) as { id: string; nome: string; cargo: string | null; papel: Papel; assessor_id: string | null }[]).map(
     (p) => ({ id: p.id, nome: p.nome, cargo: p.cargo, papel: p.papel, assessorId: p.assessor_id })
   );
+});
+
+/**
+ * Quem coordena cada assessor (nomes). A coordenação de um cliente é a
+ * do assessor dele (briefing do Hub §7). A diretoria vê todos os vínculos;
+ * a coordenação, pelo RLS, só os próprios.
+ */
+export const coordenacaoPorAssessor = cache(async (): Promise<Map<string, string[]>> => {
+  const supabase = await createClient();
+  const [vinculos, pessoas] = await Promise.all([
+    supabase.from("coordenacoes_assessores").select("usuario_id, assessor_id"),
+    diretorioPessoas(),
+  ]);
+  lancarSeErro(vinculos.error);
+  const nomeDe = new Map(pessoas.filter((p) => p.papel === "coordenacao").map((p) => [p.id, p.nome]));
+  const out = new Map<string, string[]>();
+  for (const v of (vinculos.data ?? []) as { usuario_id: string; assessor_id: string }[]) {
+    const nome = nomeDe.get(v.usuario_id);
+    if (nome) out.set(v.assessor_id, [...(out.get(v.assessor_id) ?? []), nome].sort((a, b) => a.localeCompare(b)));
+  }
+  return out;
 });
 
 export async function atualizarPessoa(

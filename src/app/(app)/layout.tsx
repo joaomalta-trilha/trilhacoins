@@ -6,7 +6,7 @@ import { obterContexto } from "@/lib/hub/contexto";
 import { itensDeNavegacao, paginaInicial, rotuloPapel } from "@/lib/hub/navegacao";
 import { sairAction } from "@/app/auth/actions";
 import { SimboloTrilha } from "@/components/marca";
-import { Doca, NavPrincipal } from "@/components/hub/menu";
+import { AtalhoDoPainel, Doca, NavPrincipal } from "@/components/hub/menu";
 import { ModoToggle } from "@/components/hub/modo-toggle";
 
 function Marca({ href }: { href: string }) {
@@ -56,6 +56,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   const { sessao, modo, podeTrocarModo } = ctx;
   const itens = itensDeNavegacao(sessao.papel, modo);
+  const foraDaDoca = itens.filter((i) => !i.emBreve).slice(5);
   const papel = rotuloPapel(sessao.papel, sessao.cargo);
   const inicial = sessao.nome.trim().slice(0, 1).toUpperCase() || "?";
 
@@ -89,6 +90,16 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <span>{papel}</span>
           </div>
         </div>
+        {foraDaDoca.length > 0 && (
+          // a doca do celular leva cinco seções; as outras ficam aqui
+          <div className="conta-secao so-celular">
+            {foraDaDoca.map((i) => (
+              <AtalhoDoPainel key={i.href} href={i.href} icone={i.icone}>
+                {i.rotulo}
+              </AtalhoDoPainel>
+            ))}
+          </div>
+        )}
         {podeTrocarModo && (
           <div className="conta-secao">
             <span>Experiência</span>

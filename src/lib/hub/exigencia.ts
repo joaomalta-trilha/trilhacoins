@@ -11,15 +11,129 @@ export type MacroNivel = "junior" | "pleno" | "senior" | "partner";
 export const EXIGENCIA_MIN = 7;
 export const EXIGENCIA_MAX = 25;
 
-export const CRITERIOS_EXIGENCIA: { criterio: string; nota1: string; nota2: string; nota3: string; pesoMaximo: number }[] = [
-  { criterio: "Volume de demandas", nota1: "Poucas entregas fixas, sem variação", nota2: "Volume moderado e previsível", nota3: "Alto volume ou picos frequentes", pesoMaximo: 4 },
-  { criterio: "Complexidade técnica", nota1: "Campanhas simples, sem integração", nota2: "Funis, públicos segmentados, testes", nota3: "Funis avançados, Make, chatbot, Google e Meta", pesoMaximo: 4 },
-  { criterio: "Relacionamento", nota1: "Cliente autônomo, raramente questiona", nota2: "Participativo, aceita alinhamentos", nota3: "Exigente, pede gestão ativa de expectativa", pesoMaximo: 3 },
-  { criterio: "Canais", nota1: "1 canal", nota2: "2 canais", nota3: "3 ou mais canais", pesoMaximo: 3 },
-  { criterio: "Urgência", nota1: "Tudo planejado com antecedência", nota2: "Urgência 1 ou 2 vezes por mês", nota3: "Urgências frequentes, prazos apertados", pesoMaximo: 3 },
-  { criterio: "Reuniões", nota1: "Sem reunião fixa", nota2: "1 reunião por mês", nota3: "2 ou mais por mês, presença constante", pesoMaximo: 3 },
-  { criterio: "Importância", nota1: "Menos relevante, sem valor estratégico", nota2: "Relevante, contrato saudável", nota3: "Perfil ideal, contrato alto, estratégico", pesoMaximo: 5 },
+export type ChaveCriterio =
+  | "volume"
+  | "complexidade"
+  | "relacionamento"
+  | "canais"
+  | "urgencia"
+  | "reunioes"
+  | "importancia";
+
+export interface CriterioExigencia {
+  /** chave estável: é ela que fica gravada no banco, nunca o nome */
+  chave: ChaveCriterio;
+  criterio: string;
+  /** referências da planilha de controle de carteira */
+  nota1: string;
+  nota2: string;
+  nota3: string;
+  /** cada critério vai de 1 até este peso */
+  pesoMaximo: number;
+}
+
+// Scorecard da planilha "Controle de Carteira": cada critério recebe de 1
+// até o peso máximo; as três notas são a referência de baixo, meio e alto.
+export const CRITERIOS_EXIGENCIA: CriterioExigencia[] = [
+  {
+    chave: "volume",
+    criterio: "Volume de demandas",
+    nota1: "Poucas entregas fixas por mês, sem variações (1 canal, poucos criativos)",
+    nota2: "Volume moderado e previsível (2 canais, criativos recorrentes)",
+    nota3: "Alto volume ou picos frequentes (múltiplos lançamentos, muitos criativos)",
+    pesoMaximo: 4,
+  },
+  {
+    chave: "complexidade",
+    criterio: "Complexidade técnica",
+    nota1: "Campanhas simples, sem integrações ou automações (impulsionamento básico)",
+    nota2: "Estrutura intermediária (funis, públicos segmentados, testes A/B)",
+    nota3: "Alta complexidade: funis avançados, Make, chatbot, Google + Meta, pixel avançado",
+    pesoMaximo: 4,
+  },
+  {
+    chave: "relacionamento",
+    criterio: "Perfil de relacionamento",
+    nota1: "Cliente autônomo, confia no trabalho e raramente questiona decisões",
+    nota2: "Cliente participativo, tem opiniões mas aceita alinhamentos com facilidade",
+    nota3: "Cliente exigente, questiona frequentemente, precisa de gestão ativa de expectativas",
+    pesoMaximo: 3,
+  },
+  {
+    chave: "canais",
+    criterio: "Canais gerenciados",
+    nota1: "1 canal ativo (ex.: apenas Meta Ads)",
+    nota2: "2 canais ativos (ex.: Meta + Google, ou Meta + orgânico)",
+    nota3: "3 ou mais canais ativos simultaneamente",
+    pesoMaximo: 3,
+  },
+  {
+    chave: "urgencia",
+    criterio: "Urgência e imprevisibilidade",
+    nota1: "Demandas sempre planejadas com antecedência, sem emergências recorrentes",
+    nota2: "Urgências ocasionais (1 a 2 vezes por mês), geralmente gerenciáveis",
+    nota3: "Urgências frequentes, mudanças de última hora, prazos apertados",
+    pesoMaximo: 3,
+  },
+  {
+    chave: "reunioes",
+    criterio: "Reuniões e relacionamento",
+    nota1: "Sem reuniões fixas, comunicação assíncrona (WhatsApp, e-mail)",
+    nota2: "1 reunião mensal e comunicação ativa no WhatsApp",
+    nota3: "2 ou mais reuniões por mês, calls frequentes, cliente quer presença constante",
+    pesoMaximo: 3,
+  },
+  {
+    chave: "importancia",
+    criterio: "Importância do cliente",
+    nota1: "Cliente menos relevante para a empresa, sem fee estratégico",
+    nota2: "Cliente relevante, fee saudável, sem ser ICP",
+    nota3: "ICP: perfil ideal, alto fee, importância estratégica",
+    pesoMaximo: 5,
+  },
 ];
+
+export type NotasCriterios = Partial<Record<ChaveCriterio, number>>;
+
+function notaValida(n: unknown, pesoMaximo: number): n is number {
+  return typeof n === "number" && Number.isInteger(n) && n >= 1 && n <= pesoMaximo;
+}
+
+/** Lê as notas gravadas no banco (jsonb): só ficam as chaves conhecidas com nota válida. */
+export function lerNotasCriterios(bruto: unknown): NotasCriterios | null {
+  if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) return null;
+  const out: NotasCriterios = {};
+  for (const c of CRITERIOS_EXIGENCIA) {
+    const n = (bruto as Record<string, unknown>)[c.chave];
+    if (notaValida(n, c.pesoMaximo)) out[c.chave] = n;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/** Soma das notas dos sete critérios; null enquanto faltar algum. */
+export function pontosDosCriterios(notas: NotasCriterios | null | undefined): number | null {
+  if (!notas) return null;
+  let soma = 0;
+  for (const c of CRITERIOS_EXIGENCIA) {
+    const n = notas[c.chave];
+    if (!notaValida(n, c.pesoMaximo)) return null;
+    soma += n;
+  }
+  return soma;
+}
+
+/** Confere o que chega do pop-up: as sete notas, inteiras, de 1 ao peso de cada critério. */
+export function validarNotasCriterios(entrada: unknown): Record<ChaveCriterio, number> {
+  if (!entrada || typeof entrada !== "object" || Array.isArray(entrada)) throw new Error("Notas inválidas.");
+  const out = {} as Record<ChaveCriterio, number>;
+  for (const c of CRITERIOS_EXIGENCIA) {
+    const n = (entrada as Record<string, unknown>)[c.chave];
+    if (n === undefined || n === null) throw new Error(`Falta a nota de ${c.criterio.toLowerCase()}.`);
+    if (!notaValida(n, c.pesoMaximo)) throw new Error(`A nota de ${c.criterio.toLowerCase()} vai de 1 a ${c.pesoMaximo}.`);
+    out[c.chave] = n;
+  }
+  return out;
+}
 
 export const FAIXAS_ESTRELAS: { de: number; ate: number; estrelas: Estrelas; exigencia: string; indicado: string }[] = [
   { de: 7, ate: 10, estrelas: 1, exigencia: "Baixa", indicado: "Qualquer nível" },
@@ -31,8 +145,13 @@ export const FAIXAS_ESTRELAS: { de: number; ate: number; estrelas: Estrelas; exi
 
 /** Pontos de exigência (7 a 25) → estrelas. Fora da faixa ou vazio → null. */
 export function estrelasDaExigencia(pts: number | null | undefined): Estrelas | null {
+  return faixaDaExigencia(pts)?.estrelas ?? null;
+}
+
+/** A faixa inteira (estrelas, exigência e assessor indicado) de uma pontuação. */
+export function faixaDaExigencia(pts: number | null | undefined): (typeof FAIXAS_ESTRELAS)[number] | null {
   if (pts == null || !Number.isFinite(pts) || pts < EXIGENCIA_MIN || pts > EXIGENCIA_MAX) return null;
-  return FAIXAS_ESTRELAS.find((f) => pts <= f.ate)!.estrelas;
+  return FAIXAS_ESTRELAS.find((f) => pts <= f.ate)!;
 }
 
 export interface Teto {

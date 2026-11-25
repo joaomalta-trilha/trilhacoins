@@ -15,6 +15,7 @@ export type IconeNav =
   | "reunioes"
   | "gestao"
   | "clientes"
+  | "assessoria"
   | "usuarios"
   | "saude";
 
@@ -56,7 +57,9 @@ export function itensDeNavegacao(papel: Papel, modo: Modo): ItemNav[] {
   }
   const itens: ItemNav[] = [
     { href: "/gestao", rotulo: "Visão geral", icone: "gestao" },
+    // Clientes: a planilha de controle; Assessoria: as carteiras, assessor por assessor
     { href: "/clientes", rotulo: "Clientes", icone: "clientes" },
+    { href: "/assessoria", rotulo: "Assessoria", icone: "assessoria" },
     { href: "/trilha", rotulo: "Trilha do Assessor", icone: "trilha" },
     { href: "/coins", rotulo: "Trilha Coins", icone: "coins" },
   ];

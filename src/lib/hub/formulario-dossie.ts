@@ -71,10 +71,11 @@ export type ChaveVarias = "objetivo" | "canais" | "crm" | "integracoes" | "ritos
 export type ChaveOutro = "objetivoOutro" | "crmOutro" | "integracoesOutro";
 export type ChaveTexto = "contato" | "meta" | "verbaMeta" | "verbaGoogle" | "contaMeta" | "produtos" | "cuidados" | "desafio";
 
+/** `curto` é o nome da pergunta nas listas ("faltam: Meta, Canais"). */
 export type Pergunta =
-  | { tipo: "uma"; chave: ChaveUma; pergunta: string; opcoes: readonly string[] }
-  | { tipo: "varias"; chave: ChaveVarias; pergunta: string; opcoes: readonly string[]; outro?: ChaveOutro }
-  | { tipo: "texto" | "area" | "valor"; chave: ChaveTexto; pergunta: string; dica?: string };
+  | { tipo: "uma"; chave: ChaveUma; curto: string; pergunta: string; opcoes: readonly string[] }
+  | { tipo: "varias"; chave: ChaveVarias; curto: string; pergunta: string; opcoes: readonly string[]; outro?: ChaveOutro }
+  | { tipo: "texto" | "area" | "valor"; chave: ChaveTexto; curto: string; pergunta: string; dica?: string };
 
 export interface BlocoDoFormulario {
   titulo: string;
@@ -86,10 +87,11 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
   {
     titulo: "Situação e contato",
     perguntas: [
-      { tipo: "uma", chave: "status", pergunta: "Esse cliente segue ativo?", opcoes: STATUS_FORM },
+      { tipo: "uma", chave: "status", curto: "Situação", pergunta: "Esse cliente segue ativo?", opcoes: STATUS_FORM },
       {
         tipo: "texto",
         chave: "contato",
+        curto: "Contato e decisor",
         pergunta: "Quem fala com a gente no grupo, e quem decide?",
         dica: "Ex.: a gerente de marketing fala no grupo; quem aprova a verba é o sócio",
       },
@@ -98,10 +100,11 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
   {
     titulo: "Objetivo e meta",
     perguntas: [
-      { tipo: "varias", chave: "objetivo", pergunta: "O que é resultado para esse cliente?", opcoes: OBJETIVOS, outro: "objetivoOutro" },
+      { tipo: "varias", chave: "objetivo", curto: "Objetivo", pergunta: "O que é resultado para esse cliente?", opcoes: OBJETIVOS, outro: "objetivoOutro" },
       {
         tipo: "texto",
         chave: "meta",
+        curto: "Meta",
         pergunta: "Qual é a meta combinada com ele?",
         dica: "Ex.: 80 contatos por mês a até R$ 40 cada. Se não há meta, escreva: sem meta",
       },
@@ -111,14 +114,15 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
     titulo: "Verba e canais",
     perguntas: [
       [
-        { tipo: "valor", chave: "verbaMeta", pergunta: "Verba mensal no Meta (R$)", dica: "Ex.: 3000" },
-        { tipo: "valor", chave: "verbaGoogle", pergunta: "Verba mensal no Google (R$)", dica: "0 se não anuncia" },
+        { tipo: "valor", chave: "verbaMeta", curto: "Verba no Meta", pergunta: "Verba mensal no Meta (R$)", dica: "Ex.: 3000" },
+        { tipo: "valor", chave: "verbaGoogle", curto: "Verba no Google", pergunta: "Verba mensal no Google (R$)", dica: "0 se não anuncia" },
       ],
-      { tipo: "uma", chave: "pagamento", pergunta: "Como a mídia é paga?", opcoes: PAGAMENTOS },
-      { tipo: "varias", chave: "canais", pergunta: "Em quais canais a gente anuncia ou dispara?", opcoes: CANAIS },
+      { tipo: "uma", chave: "pagamento", curto: "Pagamento da mídia", pergunta: "Como a mídia é paga?", opcoes: PAGAMENTOS },
+      { tipo: "varias", chave: "canais", curto: "Canais", pergunta: "Em quais canais a gente anuncia ou dispara?", opcoes: CANAIS },
       {
         tipo: "texto",
         chave: "contaMeta",
+        curto: "Conta no Meta",
         pergunta: "Como a conta de anúncios aparece no Gerenciador do Meta?",
         dica: "Nome da conta ou do negócio",
       },
@@ -127,11 +131,12 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
   {
     titulo: "CRM e integrações",
     perguntas: [
-      { tipo: "varias", chave: "crm", pergunta: "Qual CRM o cliente usa?", opcoes: CRMS, outro: "crmOutro" },
-      { tipo: "uma", chave: "crmAcesso", pergunta: "O assistente pode ter acesso de leitura a esse CRM?", opcoes: ACESSOS_CRM },
+      { tipo: "varias", chave: "crm", curto: "CRM", pergunta: "Qual CRM o cliente usa?", opcoes: CRMS, outro: "crmOutro" },
+      { tipo: "uma", chave: "crmAcesso", curto: "Acesso ao CRM", pergunta: "O assistente pode ter acesso de leitura a esse CRM?", opcoes: ACESSOS_CRM },
       {
         tipo: "varias",
         chave: "integracoes",
+        curto: "Integrações",
         pergunta: "O que precisa estar funcionando toda segunda?",
         opcoes: INTEGRACOES,
         outro: "integracoesOutro",
@@ -141,11 +146,11 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
   {
     titulo: "Campanha e rotina",
     perguntas: [
-      { tipo: "area", chave: "produtos", pergunta: "Quais produtos ou empreendimentos estão em campanha agora?" },
-      { tipo: "varias", chave: "ritos", pergunta: "Quais mensagens da semana valem para esse cliente?", opcoes: RITOS },
+      { tipo: "area", chave: "produtos", curto: "Produtos em campanha", pergunta: "Quais produtos ou empreendimentos estão em campanha agora?" },
+      { tipo: "varias", chave: "ritos", curto: "Mensagens da semana", pergunta: "Quais mensagens da semana valem para esse cliente?", opcoes: RITOS },
       [
-        { tipo: "uma", chave: "relatorio", pergunta: "Com que frequência ele recebe relatório?", opcoes: FREQ_RELATORIO },
-        { tipo: "uma", chave: "reuniao", pergunta: "E reunião de resultados?", opcoes: FREQ_REUNIAO },
+        { tipo: "uma", chave: "relatorio", curto: "Relatório", pergunta: "Com que frequência ele recebe relatório?", opcoes: FREQ_RELATORIO },
+        { tipo: "uma", chave: "reuniao", curto: "Reunião", pergunta: "E reunião de resultados?", opcoes: FREQ_REUNIAO },
       ],
     ],
   },
@@ -155,10 +160,11 @@ export const BLOCOS_DO_DOSSIE: BlocoDoFormulario[] = [
       {
         tipo: "area",
         chave: "cuidados",
+        curto: "Cuidados",
         pergunta: "O que não pode ser feito nessa conta, ou pede cuidado?",
         dica: "Ex.: não citar preço; não anunciar fora de Maceió; cliente sensível a troca de público",
       },
-      { tipo: "area", chave: "desafio", pergunta: "Qual é o maior desafio desse cliente hoje?" },
+      { tipo: "area", chave: "desafio", curto: "Desafio", pergunta: "Qual é o maior desafio desse cliente hoje?" },
     ],
   },
 ];
@@ -308,6 +314,46 @@ export function respostasDoDossie(md: string | null, statusCliente: string): Lei
   variasComTexto("ritos", null, linhaDaRotina(rotina, "Mensagens da semana que valem:"), RITOS);
 
   return { respostas: r, hoje };
+}
+
+// ---------------------------------------------------------------
+// completude: quanto do formulário o dossiê já responde
+// ---------------------------------------------------------------
+
+export interface CompletudeDossie {
+  respondidas: number;
+  total: number;
+  /** nomes curtos das perguntas sem resposta, na ordem do formulário */
+  faltam: string[];
+}
+
+/** A situação vem do cadastro do cliente, então não conta como pergunta em aberto. */
+const PERGUNTAS_DO_DOSSIE: Pergunta[] = BLOCOS_DO_DOSSIE.flatMap((b) => b.perguntas.flat()).filter(
+  (p) => p.chave !== "status"
+);
+
+function respondida(p: Pergunta, r: RespostasDossie, hoje: LeituraDoDossie["hoje"]): boolean {
+  if (p.tipo === "uma") return Boolean(r[p.chave] || hoje[p.chave]);
+  if (p.tipo === "varias") return r[p.chave].length > 0 || Boolean(p.outro && r[p.outro].trim()) || Boolean(hoje[p.chave]);
+  return r[p.chave].trim() !== "";
+}
+
+/**
+ * Dossiê completo = todas as perguntas do formulário respondidas no texto.
+ * Resposta fora das opções também conta: o que vale é ter resposta.
+ */
+export function completudeDoDossie(md: string | null): CompletudeDossie {
+  const total = PERGUNTAS_DO_DOSSIE.length;
+  if (!md?.trim()) return { respondidas: 0, total, faltam: PERGUNTAS_DO_DOSSIE.map((p) => p.curto) };
+  const { respostas, hoje } = respostasDoDossie(md, "ativo");
+  // dossiês importados guardam a conta pelo ID ("Contas: Meta act_123…"): a conta está identificada
+  if (!respostas.contaMeta && /\bMeta\s+act_\d+/.test(campo(lerDossie(md), "Contas"))) respostas.contaMeta = "act";
+  // sem CRM, a pergunta do acesso ao CRM não se aplica
+  if (!respostas.crmAcesso && respostas.crm.length > 0 && respostas.crm.every((c) => c === "Não tem")) {
+    respostas.crmAcesso = "Não se aplica";
+  }
+  const faltam = PERGUNTAS_DO_DOSSIE.filter((p) => !respondida(p, respostas, hoje)).map((p) => p.curto);
+  return { respondidas: total - faltam.length, total, faltam };
 }
 
 // ---------------------------------------------------------------

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import * as hub from "@/lib/data/hub";
 import { COOKIE_MODO, COOKIE_VER_COMO, type Modo, paginaInicial } from "@/lib/hub/navegacao";
 import { aplicarRespostas, statusDoCadastro, validarRespostas } from "@/lib/hub/formulario-dossie";
+import { pontosDosCriterios, validarNotasCriterios } from "@/lib/hub/exigencia";
 
 // Server Actions do Hub. São endpoints públicos: validam a forma do que
 // chega e devolvem { ok } previsível; quem decide se a pessoa PODE é o
@@ -100,6 +101,24 @@ export async function atualizarClienteAction(id: string, slug: string, patch: hu
     }
     await hub.atualizarCliente(uuid(id), limpo);
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
+    revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}
+
+/** Pop-up da carteira: as sete notas viram o total de exigência do cliente. */
+export async function avaliarExigenciaAction(clienteId: string, slug: string, notas: unknown): Promise<Resultado> {
+  try {
+    const validas = validarNotasCriterios(notas);
+    const pts = pontosDosCriterios(validas);
+    if (pts === null) throw new Error("Preencha os sete critérios.");
+    await hub.avaliarExigencia(uuid(clienteId), validas, pts);
+    revalidatePath("/clientes");
+    revalidatePath("/assessoria");
+    revalidatePath("/gestao");
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
     return { ok: true };
   } catch (e) {
@@ -114,6 +133,7 @@ export async function salvarDossieAction(clienteId: string, slug: string, conteu
     await hub.salvarDossie(uuid(clienteId), conteudoMd);
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -131,6 +151,7 @@ export async function definirLiberacoesAction(
     await hub.definirLiberacoes(uuid(clienteId), [...new Set(assessorIds.map(uuid))], Boolean(abertoATodos));
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
@@ -169,6 +190,7 @@ export async function criarClienteAction(entrada: {
       exigenciaPts: p,
     });
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
     revalidatePath("/gestao");
     return { ok: true, slug: criado.slug };
   } catch (e) {
@@ -180,6 +202,7 @@ export async function excluirClienteAction(clienteId: string): Promise<Resultado
   try {
     await hub.excluirCliente(uuid(clienteId));
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
     revalidatePath("/gestao");
     revalidatePath("/inicio");
     return { ok: true };
@@ -210,6 +233,7 @@ export async function salvarFormularioDossieAction(clienteId: string, slug: stri
     if (status !== cliente.status) await hub.atualizarCliente(cliente.id, { status });
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
     revalidatePath("/clientes");
+    revalidatePath("/assessoria");
     revalidatePath("/inicio");
     revalidatePath("/gestao");
     return { ok: true };

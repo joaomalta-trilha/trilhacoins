@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CRITERIOS_EXIGENCIA, estrelasDaExigencia, macroNivel, resumirCarteira, tetoDoNivel } from "./exigencia";
+import {
+  CRITERIOS_EXIGENCIA,
+  estrelasDaExigencia,
+  faixaDaExigencia,
+  lerNotasCriterios,
+  macroNivel,
+  pontosDosCriterios,
+  resumirCarteira,
+  tetoDoNivel,
+  validarNotasCriterios,
+} from "./exigencia";
 
 describe("estrelasDaExigencia", () => {
   it.each([
@@ -70,5 +80,37 @@ describe("resumirCarteira", () => {
   it("sem nível conhecido, não há teto", () => {
     const r = resumirCarteira([10, 12], null);
     expect(r).toMatchObject({ pts: 22, teto: null, pct: null, situacao: "sem-nivel" });
+  });
+});
+
+describe("notas por critério", () => {
+  // um cliente da planilha de controle de carteira: 3+3+3+3+2+3+5 = 22 pontos
+  const pesado = { volume: 3, complexidade: 3, relacionamento: 3, canais: 3, urgencia: 2, reunioes: 3, importancia: 5 };
+
+  it("a soma das sete notas é a pontuação, e a pontuação vira a faixa", () => {
+    expect(pontosDosCriterios(pesado)).toBe(22);
+    expect(faixaDaExigencia(22)).toMatchObject({ estrelas: 5, exigencia: "Máxima" });
+    expect(pontosDosCriterios({ ...pesado, volume: 1, complexidade: 1, relacionamento: 1, canais: 1, urgencia: 1, reunioes: 1, importancia: 1 })).toBe(7);
+  });
+
+  it("enquanto faltar critério, não há pontuação", () => {
+    expect(pontosDosCriterios({ ...pesado, importancia: undefined })).toBeNull();
+    expect(pontosDosCriterios(null)).toBeNull();
+  });
+
+  it("o que vem do banco só aproveita chave conhecida com nota válida", () => {
+    expect(lerNotasCriterios({ volume: 2, canais: 9, outra: 1, urgencia: "3" })).toEqual({ volume: 2 });
+    expect(lerNotasCriterios({ canais: 0 })).toBeNull();
+    expect(lerNotasCriterios([1, 2])).toBeNull();
+    expect(lerNotasCriterios(null)).toBeNull();
+  });
+
+  it("o pop-up só grava as sete notas, cada uma de 1 ao peso do critério", () => {
+    expect(validarNotasCriterios({ ...pesado, extra: 4 })).toEqual(pesado);
+    expect(() => validarNotasCriterios({ ...pesado, importancia: 6 })).toThrow("vai de 1 a 5");
+    expect(() => validarNotasCriterios({ ...pesado, canais: 4 })).toThrow("vai de 1 a 3");
+    expect(() => validarNotasCriterios({ ...pesado, volume: 2.5 })).toThrow("vai de 1 a 4");
+    expect(() => validarNotasCriterios({ ...pesado, reunioes: undefined })).toThrow("Falta a nota de reuniões e relacionamento");
+    expect(() => validarNotasCriterios("22")).toThrow("Notas inválidas");
   });
 });

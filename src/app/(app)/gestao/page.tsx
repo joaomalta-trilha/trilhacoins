@@ -110,7 +110,7 @@ export default async function GestaoPage() {
                 </Link>
               )}
               {semAssessor.length > 0 && (
-                <Link href="/clientes?filtro=sem-assessor" className="pill sub">
+                <Link href="/assessoria?filtro=sem-assessor" className="pill sub">
                   <UserX strokeWidth={1.6} aria-hidden="true" />
                   Vincular {plural(semAssessor.length, "cliente", "clientes")}
                 </Link>
@@ -126,7 +126,7 @@ export default async function GestaoPage() {
         )}
 
         <div className="grade6">
-          <Link href="/clientes?filtro=atencao" className="card">
+          <Link href="/assessoria?filtro=atencao" className="card">
             <div className="card-hd">
               <Ic ponto={atencao.length > 0}>
                 <Flag strokeWidth={1.6} />
@@ -145,7 +145,7 @@ export default async function GestaoPage() {
             </div>
           </Link>
 
-          <Link href="/clientes?filtro=sem-dossie" className="card">
+          <Link href="/assessoria?filtro=sem-dossie" className="card">
             <div className="card-hd">
               <Ic>
                 <FileQuestion strokeWidth={1.6} />
@@ -201,7 +201,7 @@ export default async function GestaoPage() {
             </div>
           </Link>
 
-          <Link href="/clientes?filtro=sem-assessor" className="card">
+          <Link href="/assessoria?filtro=sem-assessor" className="card">
             <div className="card-hd">
               <Ic ponto={semAssessor.length > 0}>
                 <UserX strokeWidth={1.6} />
@@ -277,7 +277,7 @@ export default async function GestaoPage() {
           ) : (
             <div className="ranking">
               {carteiras.map(({ assessor, nome, clientes: n, atencao: at, resumo }, i) => (
-                <Link key={assessor.id} href={`/clientes#a-${assessor.id}`} className={`rrow${i === 0 ? " p1" : ""}`}>
+                <Link key={assessor.id} href={`/assessoria#a-${assessor.id}`} className={`rrow${i === 0 ? " p1" : ""}`}>
                   <span className="pos">{i + 1}</span>
                   <span>
                     <span className="nm">{nome}</span>

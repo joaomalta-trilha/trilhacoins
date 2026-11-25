@@ -3,6 +3,7 @@ import { campo, lerDossie, lerRotina, secao, textoDaSecao } from "./dossie";
 import {
   RITOS,
   aplicarRespostas,
+  completudeDoDossie,
   escreverValor,
   lerLista,
   lerValor,
@@ -180,5 +181,47 @@ describe("validarRespostas", () => {
     expect(statusDoCadastro("Saiu")).toBe("saiu");
     expect(statusDoCadastro("Pausado")).toBe("pausado");
     expect(statusDoCadastro("Ativo")).toBe("ativo");
+  });
+});
+
+describe("completudeDoDossie", () => {
+  it("sem dossiê, nenhuma das 17 perguntas está respondida", () => {
+    const c = completudeDoDossie(null);
+    expect(c).toMatchObject({ respondidas: 0, total: 17 });
+    expect(c.faltam[0]).toBe("Contato e decisor");
+    expect(c.faltam).not.toContain("Situação");
+  });
+
+  it("o dossiê escrito pelo formulário inteiro fica completo", () => {
+    const md = aplicarRespostas(null, respostasDeExemplo(), CLIENTE);
+    expect(completudeDoDossie(md)).toEqual({ respondidas: 17, total: 17, faltam: [] });
+  });
+
+  it("aponta o que falta, pelo nome curto, na ordem do formulário", () => {
+    const r = { ...respostasDeExemplo(), contaMeta: "", crmAcesso: "", cuidados: "" };
+    const c = completudeDoDossie(aplicarRespostas(null, r, CLIENTE));
+    expect(c.faltam).toEqual(["Conta no Meta", "Acesso ao CRM", "Cuidados"]);
+    expect(c.respondidas).toBe(14);
+  });
+
+  it("resposta fora das opções também conta como respondida", () => {
+    // "Meta e Google." não é uma lista das opções, mas está respondido
+    const c = completudeDoDossie(EXISTENTE);
+    expect(c.faltam).not.toContain("Canais");
+    expect(c.faltam).not.toContain("Objetivo");
+    expect(c.faltam).toContain("Contato e decisor");
+  });
+
+  it("quem não tem CRM não fica devendo o acesso ao CRM", () => {
+    const semCrm = { ...respostasDeExemplo(), crm: ["Não tem"], crmAcesso: "" };
+    const comCrm = { ...respostasDeExemplo(), crmAcesso: "" };
+    expect(completudeDoDossie(aplicarRespostas(null, semCrm, CLIENTE)).faltam).toEqual([]);
+    expect(completudeDoDossie(aplicarRespostas(null, comCrm, CLIENTE)).faltam).toEqual(["Acesso ao CRM"]);
+  });
+
+  it("a conta do Meta registrada pelo ID na linha de contas vale como respondida", () => {
+    const comId = EXISTENTE.replace("- Canais: Meta e Google.", "- Canais: Meta e Google.\n- Contas: Meta act_123456 | Google: a confirmar");
+    expect(completudeDoDossie(EXISTENTE).faltam).toContain("Conta no Meta");
+    expect(completudeDoDossie(comId).faltam).not.toContain("Conta no Meta");
   });
 });

@@ -6,18 +6,25 @@ import {
   type ClienteRow,
   MigracaoPendenteError,
   clientesComDossie,
+  coordenacaoPorAssessor,
   diretorioAssessores,
   listarClientes,
   listarTodasLiberacoes,
+  obterDossiesDe,
 } from "@/lib/data/hub";
-import { listarAssessoresAtivos } from "@/lib/data/repo";
 import { resumirCarteira } from "@/lib/hub/exigencia";
+import { completudeDoDossie } from "@/lib/hub/formulario-dossie";
 import { AvisoMigracao, Cena, Ic, PaginaTopo, iniciais } from "@/components/hub/basicos";
 import { type CartaoCliente, type Filtro, type GrupoClientes, ListaClientes } from "@/components/hub/lista-clientes";
 import { SeletorVerComo } from "@/components/hub/ver-como";
+import { CentralClientes } from "@/components/hub/central-clientes";
+import { type LinhaCliente, filtroDaTabela } from "@/lib/hub/central-clientes";
 import { Barra } from "@/components/ui";
 
-export const metadata = { title: "Clientes" };
+export async function generateMetadata() {
+  const ctx = await obterContexto();
+  return { title: ctx?.modo === "assessor" ? "Minha carteira" : "Clientes" };
+}
 
 const FILTROS_VALIDOS: Filtro[] = ["todos", "atencao", "sem-dossie", "sem-assessor", "pausados"];
 
@@ -151,52 +158,39 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
     );
   }
 
-  // ---------------- experiência da gestão ----------------
-  const assessores = await listarAssessoresAtivos().catch(() => []);
-  const nivelDe = new Map(assessores.map((a) => [a.id, a.nivel]));
-  const porAssessor = new Map<string, ClienteRow[]>();
-  const semAssessor: ClienteRow[] = [];
-  for (const c of clientes) {
-    if (!c.assessorId) semAssessor.push(c);
-    else porAssessor.set(c.assessorId, [...(porAssessor.get(c.assessorId) ?? []), c]);
-  }
+  // ---------------- experiência da gestão: a planilha de controle ----------------
+  const [coordenacao, dossies] = await Promise.all([
+    coordenacaoPorAssessor().catch(() => new Map<string, string[]>()),
+    obterDossiesDe(clientes.map((c) => c.id)),
+  ]);
 
-  const grupos: GrupoClientes[] = [...porAssessor.entries()]
-    .map(([assessorId, lista]) => {
-      const ativos = lista.filter((c) => c.status !== "saiu");
-      const nivel = nivelDe.get(assessorId) ?? null;
-      const r = resumirCarteira(ativos.map((c) => c.exigenciaPts), nivel);
-      const squads = [...new Set(lista.map((c) => c.squad).filter(Boolean))];
-      return {
-        chave: assessorId,
-        titulo: nomes.get(assessorId) ?? "Assessor",
-        subtitulo: `${ativos.length} ${ativos.length === 1 ? "cliente ativo" : "clientes ativos"}${squads.length ? ` · Squad ${squads.join(", ")}` : ""}`,
-        carteira: { pts: r.pts, teto: r.teto?.pts ?? null, pct: r.pct, situacao: r.situacao, nivel },
-        clientes: [...lista].sort(ordem).map((c) => cartao(c, comDossie)),
-      };
-    })
-    .sort((a, b) => a.titulo.localeCompare(b.titulo));
+  const linhas: LinhaCliente[] = clientes.map((c) => {
+    const completude = completudeDoDossie(dossies.get(c.id) ?? null);
+    return {
+      id: c.id,
+      slug: c.slug,
+      nome: c.nome,
+      iniciais: iniciais(c.nome),
+      pacote: c.pacote?.replace(/\s*\+\s*Audiovisual/i, "") || null,
+      pedeAtencao: c.pedeAtencao,
+      status: c.status,
+      assessor: c.assessorId ? (nomes.get(c.assessorId) ?? "Assessor") : null,
+      coordenacao: c.assessorId ? (coordenacao.get(c.assessorId) ?? []) : [],
+      dossie: { existe: dossies.has(c.id), ...completude },
+      pts: c.exigenciaPts,
+      criterios: c.exigenciaCriterios,
+    };
+  });
 
-  if (semAssessor.length) {
-    const importados = [...new Set(semAssessor.map((c) => c.assessorImportado).filter(Boolean))];
-    grupos.unshift({
-      chave: "sem-assessor",
-      titulo: "Sem assessor vinculado",
-      subtitulo: importados.length
-        ? `Vieram da importação como: ${importados.join(", ")}. Abra o cliente e escolha o assessor.`
-        : "Abra o cliente e escolha o assessor.",
-      clientes: semAssessor.sort(ordem).map((c) => cartao(c, comDossie)),
-    });
-  }
-
+  const filtroTabela = filtroDaTabela(filtro);
   const ativos = clientes.filter((c) => c.status === "ativo").length;
-  const pendentes = clientes.filter((c) => !comDossie.has(c.id)).length;
+  const completos = linhas.filter((l) => l.dossie.faltam.length === 0).length;
 
   return (
     <Cena>
       <PaginaTopo
         titulo="Clientes"
-        lede={`${ativos} clientes ativos e ${pendentes} sem dossiê. Cada carteira mostra a soma da nota de exigência contra o teto do nível do assessor.`}
+        lede={`A central de controle: quem coordena e quem atende cada cliente, como está o dossiê e quanto ele pesa na carteira. ${ativos} ativos, ${completos} com o dossiê completo.`}
       >
         <div className="sub-row">
           <Link href="/clientes/novo" className="btn btn-primario">
@@ -205,7 +199,12 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
           </Link>
         </div>
       </PaginaTopo>
-      <ListaClientes grupos={grupos} mostrarGestao filtroInicial={filtroInicial} />
+      {coordenacao.size === 0 && ctx.sessao.papel === "diretoria" && (
+        <div className="aviso" style={{ marginTop: 28 }}>
+          A coluna Coordenação aparece quando cada coordenadora tem os assessores dela marcados em Usuários.
+        </div>
+      )}
+      <CentralClientes linhas={linhas} filtroInicial={filtroTabela} />
     </Cena>
   );
 }

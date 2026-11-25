@@ -31,6 +31,10 @@ describe("itens do menu", () => {
     expect(hrefs("assessor", "assessor")).toEqual(["/inicio", "/clientes", "/trilha", "/coins"]);
   });
 
+  it("gestão tem a planilha de Clientes e as carteiras em Assessoria", () => {
+    expect(hrefs("coordenacao", "gestao")).toEqual(["/gestao", "/clientes", "/assessoria", "/trilha", "/coins"]);
+  });
+
   it("só a diretoria vê Usuários", () => {
     expect(hrefs("diretoria", "gestao")).toContain("/gestao/usuarios");
     expect(hrefs("coordenacao", "gestao")).not.toContain("/gestao/usuarios");
@@ -48,6 +52,7 @@ describe("itens do menu", () => {
     expect(itemAtivo("/gestao/usuarios", itens)).toBe("/gestao/usuarios");
     expect(itemAtivo("/coins/equipe", itens)).toBe("/coins");
     expect(itemAtivo("/clientes/exemplo", itens)).toBe("/clientes");
+    expect(itemAtivo("/assessoria", itens)).toBe("/assessoria");
     expect(itemAtivo("/saude", itens)).toBeNull(); // em breve: não é link
     expect(itemAtivo("/clientesx", itens)).toBeNull();
   });

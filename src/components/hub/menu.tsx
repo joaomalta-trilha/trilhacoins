@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Briefcase,
+  Building2,
   CalendarDays,
   Coins,
   Compass,
@@ -24,7 +25,8 @@ const ICONES: Record<IconeNav, LucideIcon> = {
   tarefas: ListTodo,
   reunioes: CalendarDays,
   gestao: LayoutDashboard,
-  clientes: Briefcase,
+  clientes: Building2,
+  assessoria: Briefcase,
   usuarios: UserCog,
   saude: HeartPulse,
 };
@@ -80,5 +82,22 @@ export function Doca({ itens }: { itens: ItemNav[] }) {
         </Link>
       ))}
     </nav>
+  );
+}
+
+/**
+ * Atalho dentro do painel da conta. No celular a doca leva só cinco
+ * seções; o que sobra (Usuários) fica aqui. Fecha o painel ao navegar.
+ */
+export function AtalhoDoPainel({ href, icone, children }: { href: string; icone: IconeNav; children: string }) {
+  return (
+    <Link
+      href={href}
+      className="btn btn-secundario"
+      onClick={() => document.getElementById("conta-painel")?.hidePopover()}
+    >
+      <IconeDoItem icone={icone} tamanho={15} />
+      {children}
+    </Link>
   );
 }
