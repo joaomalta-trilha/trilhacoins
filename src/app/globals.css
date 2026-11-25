@@ -4143,3 +4143,95 @@ table.tabela-reunioes.agrupada {
 .tabela-reunioes.agrupada tbody tr:last-child td {
   border-bottom: 0;
 }
+
+/* Visão geral: cartão de reuniões por squad */
+.cartao-reunioes .barra-track {
+  margin-top: 12px;
+}
+.cartao-reunioes-pe {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------- Início do assessor: indicadores e "Para fazer" ---------- */
+.grade6 .card > .barra-track,
+.grade6 .card > [class^="sit-"] {
+  margin-top: 12px;
+}
+.indicador-em-breve {
+  border: 1.5px dashed rgba(20, 20, 20, 0.16);
+  background: rgba(255, 255, 255, 0.45);
+}
+.indicador-em-breve .card-t,
+.indicador-em-breve .ic {
+  color: var(--ink-2);
+}
+.em-breve-rotulo {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.para-fazer {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.para-fazer-item {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 20px;
+  background: var(--dark-2);
+  color: var(--dark-ink);
+  transition:
+    background 0.2s,
+    transform 0.3s var(--ease);
+}
+.para-fazer-item:hover {
+  background: var(--dark-3);
+  transform: translateY(-2px);
+}
+.para-fazer-ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--dark-muted);
+}
+.tom-acento .para-fazer-ponto {
+  background: var(--accent);
+}
+.tom-atencao .para-fazer-ponto {
+  background: var(--amber);
+}
+.para-fazer-texto {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.para-fazer-texto b {
+  font: 500 15px/1.3 var(--fonte);
+  color: #fff;
+}
+.para-fazer-texto small {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dark-soft);
+}
+.para-fazer-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--dark-muted);
+}
+
+/* Assessoria do assessor: título das reuniões com os meses ao lado */
+.reunioes-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}

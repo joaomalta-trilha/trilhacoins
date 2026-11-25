@@ -13,6 +13,7 @@ import { listarAssessoresAtivos } from "@/lib/data/repo";
 import { resumirCarteira } from "@/lib/hub/exigencia";
 import { AvisoMigracao, Cena, PaginaTopo, iniciais } from "@/components/hub/basicos";
 import { type CartaoCliente, type Filtro, type GrupoClientes, ListaClientes } from "@/components/hub/lista-clientes";
+import { AssessoriaDoAssessor } from "./do-assessor";
 
 export const metadata = { title: "Assessoria" };
 
@@ -38,15 +39,21 @@ function cartao(c: ClienteRow, comDossie: Set<string>): CartaoCliente {
 const ordem = (a: ClienteRow, b: ClienteRow) => Number(b.pedeAtencao) - Number(a.pedeAtencao) || a.nome.localeCompare(b.nome);
 
 /**
- * Assessoria: as carteiras, assessor por assessor, com a soma da nota de
- * exigência contra o teto do nível. A planilha de controle de todos os
- * clientes fica em Clientes.
+ * Assessoria. Na gestão: as carteiras, assessor por assessor, com a soma da
+ * nota de exigência contra o teto do nível (a planilha de controle de todos
+ * os clientes fica em Clientes). Na experiência do assessor: a rotina da
+ * semana e as reuniões da carteira (./do-assessor.tsx).
  */
-export default async function AssessoriaPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
+export default async function AssessoriaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filtro?: string; mes?: string }>;
+}) {
   const ctx = await obterContexto();
   if (!ctx) redirect("/");
-  if (ctx.sessao.papel === "assessor") redirect("/clientes");
-  const { filtro } = await searchParams;
+  const { filtro, mes } = await searchParams;
+  // na experiência do assessor, Assessoria é a rotina da semana e as reuniões da carteira
+  if (ctx.modo === "assessor") return <AssessoriaDoAssessor ctx={ctx} pedido={mes} />;
   const filtroInicial = FILTROS_VALIDOS.includes(filtro as Filtro) ? (filtro as Filtro) : "todos";
 
   let clientes: ClienteRow[];

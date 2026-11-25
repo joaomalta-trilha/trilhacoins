@@ -63,6 +63,7 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
       esperadas={esperadasNoMes(d ? lerFrequencias(d).reuniao : null)}
       mes={mesDe(agora)}
       agora={agora}
+      hrefMes={ctx.modo === "gestao" ? "/reunioes" : "/assessoria#reunioes"}
     />
   ) : ctx.modo === "gestao" ? (
     <ReunioesSemVinculo />

@@ -18,11 +18,14 @@ export function ReunioesDoCliente({
   esperadas,
   mes,
   agora,
+  hrefMes = "/reunioes",
 }: {
   reunioes: Reuniao[];
   esperadas: number | null;
   mes: string;
   agora: Date;
+  /** onde fica a visão do mês inteiro: Reuniões (gestão) ou Assessoria (assessor) */
+  hrefMes?: string;
 }) {
   const r = resumirMes(reunioes, mes, esperadas, agora);
   // a próxima marcada e as cinco mais recentes que já passaram
@@ -70,7 +73,8 @@ export function ReunioesDoCliente({
         <p className="secao-lede">Nenhuma reunião deste cliente nos últimos meses na lista de reuniões do ClickUp.</p>
       )}
       <p className="nota-rodape">
-        Da lista 🗣️ Reuniões do ClickUp, pelo campo Clientes. Visão do mês inteiro em <Link href="/reunioes">Reuniões</Link>.
+        Da lista 🗣️ Reuniões do ClickUp, pelo campo Clientes. Visão do mês inteiro em{" "}
+        <Link href={hrefMes}>{hrefMes.startsWith("/assessoria") ? "Assessoria" : "Reuniões"}</Link>.
       </p>
     </section>
   );

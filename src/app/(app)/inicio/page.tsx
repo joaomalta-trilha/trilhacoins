@@ -1,35 +1,38 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowUpRight, Check, Flag } from "lucide-react";
+import {
+  ArrowUpRight,
+  Briefcase,
+  CalendarDays,
+  Check,
+  ClipboardList,
+  Coins,
+  ExternalLink,
+  Flag,
+  MessageCircle,
+  Users,
+} from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { MigracaoPendenteError, type ClienteRow, listarClientes, obterDossiesDe } from "@/lib/data/hub";
 import { obterPainelAssessor } from "@/lib/data/repo";
-import { DIAS_UTEIS, type DiaUtil, lerDossie, lerRotina, resumoDoItem } from "@/lib/hub/dossie";
+import { buscarReunioes } from "@/lib/data/clickup";
 import { resumirCarteira } from "@/lib/hub/exigencia";
+import { paraFazerDoAssessor } from "@/lib/hub/inicio";
+import {
+  contarClientesComReuniao,
+  mesDe,
+  montarLinhasDeReunioes,
+  nomeDoMes,
+  reunioesPorCliente,
+  vencidasDoMes,
+} from "@/lib/hub/reunioes";
+import { agoraEmMaceio, montarRotina, ritosDoDia } from "@/lib/hub/rotina";
 import { primeiroNome } from "@/lib/hub/texto";
-import { AvisoMigracao, Cena, EmBreve, Faixa, Ic, PaginaTopo, Seta, iniciais } from "@/components/hub/basicos";
-import { type ClienteRotina, RotinaDaSemana } from "@/components/hub/rotina-semana";
+import { AvisoMigracao, Cena, Chip, EmBreve, Faixa, Ic, PaginaTopo, Seta } from "@/components/hub/basicos";
 import { SeletorVerComo } from "@/components/hub/ver-como";
-import { Barra, fmt, rotuloMes } from "@/components/ui";
+import { Barra, fmt } from "@/components/ui";
 
 export const metadata = { title: "Início" };
-
-const FUSO = "America/Maceio";
-
-function agoraEmMaceio() {
-  const agora = new Date();
-  const hora = Number(new Intl.DateTimeFormat("pt-BR", { hour: "numeric", hourCycle: "h23", timeZone: FUSO }).format(agora));
-  const diaSemana = new Intl.DateTimeFormat("pt-BR", { weekday: "long", timeZone: FUSO }).format(agora);
-  const data = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", timeZone: FUSO }).format(agora);
-  const nome = diaSemana.split("-")[0].toLowerCase();
-  const indice = ["segunda", "terça", "quarta", "quinta", "sexta"].indexOf(nome);
-  const rotulo = `${diaSemana}, ${data}`;
-  return {
-    saudacao: hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite",
-    diaUtil: (indice >= 0 ? DIAS_UTEIS[indice] : null) as DiaUtil | null,
-    rotuloDia: rotulo.charAt(0).toUpperCase() + rotulo.slice(1),
-  };
-}
 
 const SITUACAO: Record<string, string> = {
   equilibrada: "carteira equilibrada para o nível",
@@ -37,6 +40,8 @@ const SITUACAO: Record<string, string> = {
   completa: "carteira completa para o nível",
   "sem-nivel": "nível da carteira a definir",
 };
+
+const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
 function CartaoAtencao({ clientes }: { clientes: ClienteRow[] }) {
   if (clientes.length === 0) {
@@ -81,28 +86,55 @@ function CartaoAtencao({ clientes }: { clientes: ClienteRow[] }) {
   );
 }
 
+/** Indicador que ainda não existe: chega com o WhatsApp da Trilha (fase 4). */
+function IndicadorEmBreve({ icone, titulo, sobre }: { icone: React.ReactNode; titulo: string; sobre: string }) {
+  return (
+    <div className="card indicador-em-breve">
+      <div className="card-hd">
+        <Ic>{icone}</Ic>
+        <Chip>fase 4</Chip>
+      </div>
+      <div className="card-t">
+        {titulo}
+        <small>{sobre}</small>
+      </div>
+      <div className="card-ft">
+        <span className="em-breve-rotulo">Chega com o WhatsApp da Trilha</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Início do assessor: a visão geral do dia. Os indicadores da carteira e o
+ * que pede ação agora. A rotina da semana e as reuniões, em detalhe, ficam
+ * na Assessoria.
+ */
 export default async function InicioPage() {
   const ctx = await obterContexto();
   if (!ctx) redirect("/");
   if (ctx.modo === "gestao") redirect("/gestao");
 
   const alvo = ctx.assessorAlvo;
-  const { saudacao, diaUtil, rotuloDia } = agoraEmMaceio();
+  const agora = new Date();
+  const { saudacao, diaUtil, rotuloDia } = agoraEmMaceio(agora);
   const ehOProprio = ctx.sessao.papel === "assessor";
   const nomeNaTela = ehOProprio ? primeiroNome(ctx.sessao.nome) : alvo ? primeiroNome(alvo.nome) : "";
 
-  let clientes: ClienteRow[] = [];
+  let visiveis: ClienteRow[] = [];
   let migracaoPendente = false;
   try {
-    clientes = (await listarClientes()).filter((c) => alvo && c.assessorId === alvo.id && c.status !== "saiu");
+    visiveis = await listarClientes();
   } catch (e) {
     if (!(e instanceof MigracaoPendenteError)) throw e;
     migracaoPendente = true;
   }
+  const clientes = visiveis.filter((c) => alvo && c.assessorId === alvo.id && c.status !== "saiu");
 
-  const [painel, dossies] = await Promise.all([
+  const [painel, dossies, leitura] = await Promise.all([
     alvo ? obterPainelAssessor(alvo.id).catch(() => undefined) : Promise.resolve(undefined),
     migracaoPendente ? Promise.resolve(new Map<string, string>()) : obterDossiesDe(clientes.map((c) => c.id)),
+    alvo && !migracaoPendente ? buscarReunioes(agora) : Promise.resolve(null),
   ]);
 
   const resumo = resumirCarteira(clientes.map((c) => c.exigenciaPts), alvo?.nivel);
@@ -110,22 +142,37 @@ export default async function InicioPage() {
     .filter((c) => c.pedeAtencao)
     .sort((a, b) => (b.exigenciaPts ?? 0) - (a.exigenciaPts ?? 0) || a.nome.localeCompare(b.nome));
 
-  const rotina: ClienteRotina[] = clientes.flatMap((c) => {
-    const md = dossies.get(c.id);
-    const r = md ? lerRotina(lerDossie(md)) : null;
-    if (!r) return [];
-    const dias = Object.fromEntries(DIAS_UTEIS.map((d) => [d, r.dias[d].map(resumoDoItem)])) as Record<DiaUtil, string[]>;
-    if (!DIAS_UTEIS.some((d) => dias[d].length)) return [];
-    return [{ slug: c.slug, nome: c.nome, iniciais: iniciais(c.nome), pedeAtencao: c.pedeAtencao, dias }];
+  // rotina de hoje e reuniões do mês, para os indicadores e o "Para fazer"
+  const hoje = ritosDoDia(montarRotina(clientes, dossies), diaUtil);
+  const mes = mesDe(agora);
+  const nomeMes = nomeDoMes(mes).replace(/ de \d{4}$/, "");
+  const { porCliente } = reunioesPorCliente(leitura?.ok ? leitura.reunioes : [], visiveis);
+  const linhas = montarLinhasDeReunioes({
+    clientes,
+    porCliente,
+    dossies,
+    nomeDoAssessor: new Map(),
+    nomeDaPessoa: new Map(),
+    mes,
+    agora,
   });
+  const conta = contarClientesComReuniao(linhas);
+  const vencidas = vencidasDoMes(porCliente, clientes, mes);
+  const itens = paraFazerDoAssessor({ vencidas, linhas, ritosHoje: hoje, diaUtil, nomeDoMes: nomeMes });
+  const pctReunioes = conta.clientes ? Math.round((conta.comReuniao / conta.clientes) * 100) : 0;
 
-  const deHoje = diaUtil ? rotina.filter((c) => c.dias[diaUtil].length) : [];
-  const ritosHoje = diaUtil ? deHoje.reduce((s, c) => s + c.dias[diaUtil].length, 0) : 0;
-  const resumoDoDia = !diaUtil
-    ? "Fim de semana, sem ritos. Na segunda, o relatório sai até 10h20."
-    : ritosHoje
-      ? `Hoje são ${ritosHoje} ${ritosHoje === 1 ? "rito" : "ritos"} em ${deHoje.length} ${deHoje.length === 1 ? "cliente" : "clientes"}.`
-      : "Nenhum rito marcado para hoje nos dossiês da carteira.";
+  const resumoDoDia = [
+    !diaUtil
+      ? "Fim de semana, sem ritos. Na segunda, o relatório sai até 10h20."
+      : hoje.ritos
+        ? `Hoje são ${plural(hoje.ritos, "rito", "ritos")} em ${plural(hoje.clientes, "cliente", "clientes")}.`
+        : "Nenhum rito marcado para hoje nos dossiês da carteira.",
+    leitura?.ok && conta.clientes
+      ? `Em ${nomeMes}, ${conta.comReuniao} de ${plural(conta.clientes, "cliente", "clientes")} já tiveram reunião.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <>
@@ -155,78 +202,182 @@ export default async function InicioPage() {
           </div>
         )}
 
-        <RotinaDaSemana hoje={diaUtil} clientes={rotina} />
-      </Cena>
-
-      <Faixa rotulo="Carteira, Trilha Coins e próximas fases">
-        <div className="faixa-bloco">
-          <div className="secao-cab">
-            <h2>Carteira e Trilha Coins</h2>
-          </div>
-          <div className="grade-2">
-            <Link href="/clientes" className="painel">
-              <div className="painel-hd">
-                <span>Carteira{alvo?.nivel ? ` · ${alvo.nivel}` : ""}</span>
-                <Seta claro />
+        <section aria-labelledby="t-indicadores">
+          <h2 id="t-indicadores" className="sr-only">
+            Indicadores da carteira
+          </h2>
+          <div className="grade6">
+            <Link href="/assessoria#reunioes" className="card">
+              <div className="card-hd">
+                <Ic ponto={vencidas.length > 0}>
+                  <CalendarDays strokeWidth={1.6} />
+                </Ic>
+                <Seta />
               </div>
-              <div className="num grande">
-                {resumo.pts}
-                <small>{resumo.teto ? `de ${resumo.teto.pts} pontos de exigência` : "pontos de exigência"}</small>
+              <div className="card-t">
+                Reuniões · {nomeMes}
+                <small>clientes com pelo menos uma reunião feita</small>
+              </div>
+              <div className="card-ft">
+                {leitura?.ok ? (
+                  <span className="num">
+                    {conta.comReuniao}
+                    <small>de {plural(conta.clientes, "cliente", "clientes")}</small>
+                  </span>
+                ) : (
+                  <span className="em-breve-rotulo">O ClickUp não respondeu agora</span>
+                )}
+              </div>
+              {leitura?.ok && <Barra pct={pctReunioes} />}
+            </Link>
+
+            <Link href="/assessoria#rotina" className="card">
+              <div className="card-hd">
+                <Ic>
+                  <ClipboardList strokeWidth={1.6} />
+                </Ic>
+                <Seta />
+              </div>
+              <div className="card-t">
+                Rotina de hoje
+                <small>ritos dos dossiês da carteira</small>
+              </div>
+              <div className="card-ft">
+                {diaUtil ? (
+                  <span className="num">
+                    {hoje.ritos}
+                    <small>{hoje.ritos ? `em ${plural(hoje.clientes, "cliente", "clientes")}` : "ritos"}</small>
+                  </span>
+                ) : (
+                  <span className="num palavra">Fim de semana</span>
+                )}
+              </div>
+            </Link>
+
+            <Link href="/clientes" className="card">
+              <div className="card-hd">
+                <Ic>
+                  <Briefcase strokeWidth={1.6} />
+                </Ic>
+                <Seta />
+              </div>
+              <div className="card-t">
+                Carteira{alvo?.nivel ? ` · ${alvo.nivel}` : ""}
+                <small>
+                  {plural(clientes.length, "cliente", "clientes")} · {SITUACAO[resumo.situacao]}
+                </small>
+              </div>
+              <div className="card-ft">
+                <span className="num">
+                  {resumo.pts}
+                  <small>{resumo.teto ? `de ${resumo.teto.pts} pontos` : "pontos de exigência"}</small>
+                </span>
               </div>
               {resumo.teto && (
                 <div className={`sit-${resumo.situacao}`}>
                   <Barra pct={resumo.pct ?? 0} />
                 </div>
               )}
-              <p>
-                {clientes.length} {clientes.length === 1 ? "cliente" : "clientes"} · {SITUACAO[resumo.situacao]}
-                {resumo.excede4 || resumo.excede5 ? " · passou do limite de clientes de 4 e 5 estrelas" : ""}
-              </p>
             </Link>
 
             {painel ? (
-              <Link href="/coins" className="painel">
-                <div className="painel-hd">
-                  <span>Trilha Coins · {painel.nivelAtual}</span>
-                  <Seta claro />
+              <Link href="/coins" className="card">
+                <div className="card-hd">
+                  <Ic>
+                    <Coins strokeWidth={1.6} />
+                  </Ic>
+                  <Seta />
                 </div>
-                <div className="num grande">
-                  {fmt(painel.saldo)}
-                  <small>coins</small>
+                <div className="card-t">
+                  Trilha Coins · {painel.nivelAtual}
+                  <small>
+                    {painel.proximoNivel
+                      ? `${Math.round(painel.pctNivel)}% do caminho até ${painel.proximoNivel}`
+                      : "nível máximo da trilha"}
+                  </small>
                 </div>
-                {painel.proximoNivel ? (
-                  <>
-                    <Barra pct={painel.pctNivel} />
-                    <p>
-                      {Math.round(painel.pctNivel)}% do caminho até {painel.proximoNivel}
-                      {painel.checkpointProvavel
-                        ? `. Promoção provável em ${rotuloMes(painel.checkpointProvavel)}.`
-                        : "."}
-                    </p>
-                  </>
-                ) : (
-                  <p>Nível máximo da trilha.</p>
-                )}
+                <div className="card-ft">
+                  <span className="num">
+                    {fmt(painel.saldo)}
+                    <small>coins</small>
+                  </span>
+                </div>
+                {painel.proximoNivel && <Barra pct={painel.pctNivel} />}
               </Link>
             ) : (
-              <div className="painel">
-                <div className="painel-hd">
-                  <span>Trilha Coins</span>
+              <div className="card">
+                <div className="card-hd">
+                  <Ic>
+                    <Coins strokeWidth={1.6} />
+                  </Ic>
                 </div>
-                <p>O painel de coins aparece quando houver um mês fechado.</p>
+                <div className="card-t">
+                  Trilha Coins
+                  <small>o painel de coins aparece quando houver um mês fechado</small>
+                </div>
               </div>
             )}
+
+            <IndicadorEmBreve
+              icone={<MessageCircle strokeWidth={1.6} />}
+              titulo="SLA de resposta no grupo"
+              sobre="tempo até o time responder o cliente no grupo de WhatsApp"
+            />
+            <IndicadorEmBreve
+              icone={<Users strokeWidth={1.6} />}
+              titulo="Pontos de contato"
+              sobre="conversas com cada cliente na semana (a meta é 3)"
+            />
           </div>
+        </section>
+      </Cena>
+
+      <Faixa rotulo="Para fazer e próximas fases">
+        <div className="faixa-bloco">
+          <div className="secao-cab">
+            <h2>Para fazer</h2>
+            {itens.length > 0 && (
+              <span className="cnt">
+                <b>{itens.length}</b>
+                {itens.length === 1 ? "item" : "itens"}
+              </span>
+            )}
+            <p>O que pede ação agora, pelas reuniões do mês e pela rotina de hoje. O detalhe de tudo está na Assessoria.</p>
+          </div>
+          {itens.length ? (
+            <ul className="para-fazer">
+              {itens.map((i) => (
+                <li key={i.chave}>
+                  <a
+                    href={i.href}
+                    className={`para-fazer-item tom-${i.tom}`}
+                    {...(i.externo ? { target: "_blank", rel: "noreferrer" } : {})}
+                  >
+                    <i className="para-fazer-ponto" aria-hidden="true" />
+                    <span className="para-fazer-texto">
+                      <b>{i.titulo}</b>
+                      <small>{i.detalhe}</small>
+                    </span>
+                    {i.externo ? (
+                      <ExternalLink strokeWidth={1.6} aria-hidden="true" />
+                    ) : (
+                      <ArrowUpRight strokeWidth={1.8} aria-hidden="true" />
+                    )}
+                    {i.externo && <span className="sr-only">(abre no ClickUp)</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="vazio-escuro">Nada pedindo ação agora: reuniões do mês em dia e nenhum rito para hoje.</p>
+          )}
         </div>
 
         <div className="faixa-bloco">
           <div className="secao-cab">
             <h2>Chega nas próximas fases</h2>
           </div>
-          <div className="grade-3">
-            <EmBreve titulo="Reuniões do mês" fase="fase 3">
-              Realizadas contra as esperadas pela frequência combinada no dossiê, vindas da lista de reuniões do ClickUp.
-            </EmBreve>
+          <div className="grade-2">
             <EmBreve titulo="Tarefas em atraso" fase="fase 3">
               Suas tarefas vencidas e as que vencem hoje no ClickUp, antes de virarem atrasadas às 18h.
             </EmBreve>

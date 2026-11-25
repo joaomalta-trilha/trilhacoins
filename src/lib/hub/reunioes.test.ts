@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   agruparPorSquad,
   contarClientesComReuniao,
+  feitasNoMes,
+  mesDaTela,
+  montarLinhasDeReunioes,
+  vencidasDoMes,
   type Reuniao,
   type TarefaClickUp,
   diaDe,
@@ -234,5 +238,77 @@ describe("conta e grupos da tela da gestão", () => {
     const misto = agruparPorSquad([linha("1", "a", "c1", "Norte"), linha("2", "a", "c1", "Norte"), linha("3", "a", "c1", "Leste")]);
     expect(misto[0].rotulo).toBe("Squad Norte");
     expect(agruparPorSquad([linha("1", "a", "c9", null)])[0].rotulo).toBe("Squad Coordenadora");
+  });
+});
+
+describe("reuniões feitas no mês, por cliente", () => {
+  it("só as realizadas do mês; a de um grupo vai para cada cliente dele", () => {
+    const rs = [
+      reuniao("2026-11-05", "realizada", OPCAO_A),
+      reuniao("2026-11-20", "agendada", OPCAO_A),
+      reuniao("2026-10-30", "realizada", OPCAO_A),
+      reuniao("2026-11-12", "realizada", OPCAO_B),
+    ];
+    const clientes = [
+      { id: "c1", clickupClienteOpcao: OPCAO_A },
+      { id: "c2", clickupClienteOpcao: OPCAO_A },
+      { id: "c3", clickupClienteOpcao: null },
+    ];
+    const feitas = feitasNoMes(rs, clientes, "2026-11");
+    expect(feitas.get("c1")).toEqual(["2026-11-05-realizada"]);
+    expect(feitas.get("c2")).toEqual(["2026-11-05-realizada"]);
+    expect(feitas.has("c3")).toBe(false);
+  });
+});
+
+describe("mês da tela", () => {
+  it("aceita meses dentro da janela; fora dela ou inválido, vale o mês atual", () => {
+    expect(mesDaTela("2026-10", AGORA)).toEqual({ mes: "2026-10", mesAtual: "2026-11", anterior: "2026-09", seguinte: "2026-11" });
+    expect(mesDaTela(undefined, AGORA).mes).toBe("2026-11");
+    expect(mesDaTela("2025-01", AGORA).mes).toBe("2026-11");
+    expect(mesDaTela("2026-13", AGORA).mes).toBe("2026-11");
+    expect(mesDaTela("2026-05", AGORA).anterior).toBeNull(); // começo da janela
+    expect(mesDaTela("2027-02", AGORA).seguinte).toBeNull(); // fim da janela
+  });
+});
+
+describe("linhas e vencidas das telas", () => {
+  it("monta a linha do cliente com a frequência do dossiê e o mês dele", () => {
+    const md = "# Exemplo\n\n## Rotina do assistente\n- Relatório: Semanal · Reunião de resultados: Quinzenal\n";
+    const [l] = montarLinhasDeReunioes({
+      clientes: [{ id: "c1", slug: "exemplo", nome: "Exemplo Imóveis", assessorId: "a1", coordenacaoId: "p1", squad: "Norte", clickupClienteOpcao: OPCAO_A }],
+      porCliente: new Map([["c1", [reuniao("2026-11-05", "realizada"), reuniao("2026-11-28", "agendada")]]]),
+      dossies: new Map([["c1", md]]),
+      nomeDoAssessor: new Map([["a1", "Fulano"]]),
+      nomeDaPessoa: new Map([["p1", "Beltrana"]]),
+      mes: "2026-11",
+      agora: AGORA,
+    });
+    expect(l).toMatchObject({
+      iniciais: "EI",
+      assessor: "Fulano",
+      coordenacao: "Beltrana",
+      frequencia: "Quinzenal",
+      esperadas: 2,
+      realizadas: 1,
+      realizadasIds: ["2026-11-05-realizada"],
+      agendadas: 1,
+      situacao: "agendada",
+      ligado: true,
+    });
+  });
+
+  it("vencidas do mês: uma vez cada, com os clientes da tela, em ordem de data", () => {
+    const grupo = reuniao("2026-11-10", "vencida");
+    const porCliente = new Map([
+      ["c1", [grupo, reuniao("2026-11-03", "vencida"), reuniao("2026-10-20", "vencida")]],
+      ["c2", [grupo]],
+      ["c9", [reuniao("2026-11-04", "vencida")]],
+    ]);
+    const v = vencidasDoMes(porCliente, [{ id: "c1", nome: "Um" }, { id: "c2", nome: "Dois" }], "2026-11");
+    expect(v.map((x) => [x.reuniao.data?.slice(0, 10), x.clientes])).toEqual([
+      ["2026-11-03", ["Um"]],
+      ["2026-11-10", ["Um", "Dois"]],
+    ]);
   });
 });

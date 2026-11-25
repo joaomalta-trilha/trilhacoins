@@ -1,4 +1,5 @@
-import { normalizarNome } from "./texto";
+import { lerDossie, lerFrequencias } from "./dossie";
+import { iniciais, normalizarNome } from "./texto";
 
 // Reuniões com clientes (fase 3), lidas da lista 🗣️ Reuniões do ClickUp.
 // Cada tarefa é uma reunião: o prazo é o dia e a hora; o status diz se
@@ -300,6 +301,21 @@ export function contarClientesComReuniao(linhas: { realizadas: number; realizada
   };
 }
 
+/**
+ * IDs das reuniões feitas no mês, por cliente. A reunião de um grupo do
+ * ClickUp aparece em cada cliente do grupo (e conta uma vez no total, ver
+ * contarClientesComReuniao). Quem não aparece no mapa não teve reunião.
+ */
+export function feitasNoMes(
+  reunioes: Reuniao[],
+  clientes: { id: string; clickupClienteOpcao: string | null }[],
+  mes: string
+): Map<string, string[]> {
+  const doMes = reunioes.filter((r) => r.situacao === "realizada" && r.data && mesDe(new Date(r.data)) === mes);
+  const { porCliente } = reunioesPorCliente(doMes, clientes);
+  return new Map([...porCliente].map(([id, rs]) => [id, rs.map((r) => r.id)]));
+}
+
 export interface LinhaAgrupavel {
   nome: string;
   assessorId: string | null;
@@ -369,4 +385,142 @@ export function agruparPorSquad<T extends LinhaAgrupavel>(linhas: T[]): GrupoSqu
     })
     .sort((a, b) => ultimoSeVazio(a.vazio, b.vazio, a.rotulo, b.rotulo))
     .map(({ chave, rotulo, coordenacao, assessores }) => ({ chave, rotulo, coordenacao, assessores }));
+}
+
+// ---------------------------------------------------------------
+// linhas das telas de reuniões (gestão, Assessoria do assessor, Início)
+// ---------------------------------------------------------------
+
+export interface ReuniaoCurta {
+  data: string;
+  url: string;
+}
+
+export interface LinhaReuniao {
+  id: string;
+  slug: string;
+  nome: string;
+  iniciais: string;
+  assessorId: string | null;
+  assessor: string | null;
+  coordenacaoId: string | null;
+  coordenacao: string | null;
+  /** squad escrito no cadastro do cliente */
+  squad: string | null;
+  /** cliente ligado a uma opção do campo Clientes do ClickUp */
+  ligado: boolean;
+  /** frequência combinada no dossiê ("Mensal") */
+  frequencia: string | null;
+  esperadas: number | null;
+  realizadas: number;
+  /** IDs das reuniões feitas no mês (a de um grupo aparece em mais de um cliente) */
+  realizadasIds: string[];
+  agendadas: number;
+  vencidas: number;
+  proxima: ReuniaoCurta | null;
+  ultima: ReuniaoCurta | null;
+  situacao: SituacaoDoMes;
+}
+
+export interface ClienteDaConta {
+  id: string;
+  slug: string;
+  nome: string;
+  assessorId: string | null;
+  coordenacaoId?: string | null;
+  squad: string | null;
+  clickupClienteOpcao: string | null;
+}
+
+/** Frequência de reunião combinada no dossiê ("Mensal"); null sem dossiê ou sem a resposta. */
+export function frequenciaDoDossie(md: string | null | undefined): string | null {
+  return md ? lerFrequencias(lerDossie(md)).reuniao : null;
+}
+
+/** Uma linha por cliente: o mês dele contra a frequência do dossiê, a próxima e a última reunião. */
+export function montarLinhasDeReunioes(args: {
+  clientes: ClienteDaConta[];
+  porCliente: Map<string, Reuniao[]>;
+  dossies: Map<string, string>;
+  nomeDoAssessor: Map<string, string>;
+  nomeDaPessoa: Map<string, string>;
+  mes: string;
+  agora: Date;
+}): LinhaReuniao[] {
+  const { clientes, porCliente, dossies, nomeDoAssessor, nomeDaPessoa, mes, agora } = args;
+  return clientes.map((c) => {
+    const frequencia = frequenciaDoDossie(dossies.get(c.id));
+    const esperadas = esperadasNoMes(frequencia);
+    const doCliente = porCliente.get(c.id) ?? [];
+    const r = resumirMes(doCliente, mes, esperadas, agora);
+    return {
+      id: c.id,
+      slug: c.slug,
+      nome: c.nome,
+      iniciais: iniciais(c.nome),
+      assessorId: c.assessorId,
+      assessor: c.assessorId ? (nomeDoAssessor.get(c.assessorId) ?? null) : null,
+      coordenacaoId: c.coordenacaoId ?? null,
+      coordenacao: c.coordenacaoId ? (nomeDaPessoa.get(c.coordenacaoId) ?? null) : null,
+      squad: c.squad,
+      ligado: !!c.clickupClienteOpcao,
+      frequencia: esperadas === null ? null : frequencia,
+      esperadas,
+      realizadas: r.realizadas,
+      realizadasIds: doCliente
+        .filter((x) => x.situacao === "realizada" && x.data && mesDe(new Date(x.data)) === mes)
+        .map((x) => x.id),
+      agendadas: r.agendadas,
+      vencidas: r.vencidas,
+      proxima: r.proxima?.data ? { data: r.proxima.data, url: r.proxima.url } : null,
+      ultima: r.ultima?.data ? { data: r.ultima.data, url: r.ultima.url } : null,
+      situacao: r.situacao,
+    };
+  });
+}
+
+export interface ReuniaoVencida {
+  reuniao: Reuniao;
+  /** nomes dos clientes da tela que a reunião envolve (um grupo pode ser mais de um) */
+  clientes: string[];
+}
+
+/** Reuniões do mês que ainda estão agendadas com o dia passado, uma vez cada, em ordem de data. */
+export function vencidasDoMes(
+  porCliente: Map<string, Reuniao[]>,
+  clientes: { id: string; nome: string }[],
+  mes: string
+): ReuniaoVencida[] {
+  const nomeDe = new Map(clientes.map((c) => [c.id, c.nome]));
+  const vencidas = new Map<string, ReuniaoVencida>();
+  for (const [clienteId, lista] of porCliente) {
+    const nome = nomeDe.get(clienteId);
+    if (!nome) continue;
+    for (const r of lista) {
+      if (r.situacao !== "vencida" || !r.data || mesDe(new Date(r.data)) !== mes) continue;
+      const atual = vencidas.get(r.id) ?? { reuniao: r, clientes: [] };
+      atual.clientes.push(nome);
+      vencidas.set(r.id, atual);
+    }
+  }
+  return [...vencidas.values()].sort((a, b) => (a.reuniao.data ?? "").localeCompare(b.reuniao.data ?? ""));
+}
+
+/**
+ * O mês pedido no endereço (?mes=2026-10), dentro da janela que o Hub lê do
+ * ClickUp (6 meses para trás, 3 para frente). Fora dela, ou inválido, vale o
+ * mês atual.
+ */
+export function mesDaTela(pedido: string | undefined, agora: Date) {
+  const mesAtual = mesDe(agora);
+  const primeiro = mesVizinho(mesAtual, -6);
+  const ultimo = mesVizinho(mesAtual, 3);
+  const mes =
+    pedido && /^\d{4}-(0[1-9]|1[0-2])$/.test(pedido) && pedido >= primeiro && pedido <= ultimo ? pedido : mesAtual;
+  return {
+    mes,
+    mesAtual,
+    anterior: mes > primeiro ? mesVizinho(mes, -1) : null,
+    seguinte: mes < ultimo ? mesVizinho(mes, 1) : null,
+  };
 }

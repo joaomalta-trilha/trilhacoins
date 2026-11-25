@@ -51,7 +51,8 @@ export function itensDeNavegacao(papel: Papel, modo: Modo): ItemNav[] {
     return [
       { href: "/inicio", rotulo: "Início", icone: "inicio" },
       { href: "/clientes", rotulo: "Minha carteira", icone: "carteira" },
-      { href: "/reunioes", rotulo: "Reuniões", icone: "reunioes" },
+      // rotina da semana e reuniões da carteira
+      { href: "/assessoria", rotulo: "Assessoria", icone: "assessoria" },
       { href: "/trilha", rotulo: "Trilha do Assessor", icone: "trilha" },
       { href: "/coins", rotulo: "Trilha Coins", icone: "coins" },
       { href: "/tarefas", rotulo: "Tarefas", icone: "tarefas", emBreve: "fase 3" },

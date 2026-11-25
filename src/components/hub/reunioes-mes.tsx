@@ -8,6 +8,8 @@ import { atualizarReunioesAction } from "@/app/hub-actions";
 import {
   type ContaDoGrupo,
   type GrupoSquad,
+  type LinhaReuniao,
+  type ReuniaoCurta,
   type SituacaoDoMes,
   agruparPorSquad,
   contarClientesComReuniao,
@@ -16,36 +18,7 @@ import {
 import { normalizarNome } from "@/lib/hub/texto";
 import { RolagemX } from "@/components/rolagem-x";
 
-export interface ReuniaoCurta {
-  data: string;
-  url: string;
-}
-
-export interface LinhaReuniao {
-  id: string;
-  slug: string;
-  nome: string;
-  iniciais: string;
-  assessorId: string | null;
-  assessor: string | null;
-  coordenacaoId: string | null;
-  coordenacao: string | null;
-  /** squad escrito no cadastro do cliente */
-  squad: string | null;
-  /** cliente ligado a uma opção do campo Clientes do ClickUp */
-  ligado: boolean;
-  /** frequência combinada no dossiê ("Mensal") */
-  frequencia: string | null;
-  esperadas: number | null;
-  realizadas: number;
-  /** IDs das reuniões feitas no mês (a de um grupo aparece em mais de um cliente) */
-  realizadasIds: string[];
-  agendadas: number;
-  vencidas: number;
-  proxima: ReuniaoCurta | null;
-  ultima: ReuniaoCurta | null;
-  situacao: SituacaoDoMes;
-}
+export type { LinhaReuniao, ReuniaoCurta };
 
 type Filtro = "todos" | "atencao" | "em-dia";
 

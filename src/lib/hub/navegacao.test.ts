@@ -28,7 +28,7 @@ describe("itens do menu", () => {
       .map((i) => i.href);
 
   it("assessor vê o próprio dia, a carteira, a Trilha e o Coins", () => {
-    expect(hrefs("assessor", "assessor")).toEqual(["/inicio", "/clientes", "/reunioes", "/trilha", "/coins"]);
+    expect(hrefs("assessor", "assessor")).toEqual(["/inicio", "/clientes", "/assessoria", "/trilha", "/coins"]);
   });
 
   it("gestão tem a planilha de Clientes, as Reuniões e as carteiras em Assessoria", () => {

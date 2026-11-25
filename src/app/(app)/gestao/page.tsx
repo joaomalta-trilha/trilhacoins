@@ -1,9 +1,25 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Coins, FileQuestion, Flag, Gauge, UserPlus, UserX, Users } from "lucide-react";
+import { CalendarDays, Coins, FileQuestion, Flag, Gauge, UserPlus, UserX, Users } from "lucide-react";
 import { exigirGestao } from "@/lib/auth/sessao";
 import { obterContexto } from "@/lib/hub/contexto";
-import { MigracaoPendenteError, type ClienteRow, clientesComDossie, diretorioAssessores, listarClientes } from "@/lib/data/hub";
+import {
+  MigracaoPendenteError,
+  type ClienteRow,
+  clientesComDossie,
+  diretorioAssessores,
+  diretorioPessoas,
+  listarClientes,
+} from "@/lib/data/hub";
+import { buscarReunioes } from "@/lib/data/clickup";
+import {
+  type ContaDoGrupo,
+  agruparPorSquad,
+  contarClientesComReuniao,
+  feitasNoMes,
+  mesDe,
+  nomeDoMes,
+} from "@/lib/hub/reunioes";
 import { listarAssessoresAtivos, listarUsuarios, mesReferenciaPadrao, statusDoMes } from "@/lib/data/repo";
 import { resumirCarteira } from "@/lib/hub/exigencia";
 import { AvisoMigracao, Cena, Chip, EmBreve, Faixa, Ic, PaginaTopo, Seta } from "@/components/hub/basicos";
@@ -20,6 +36,33 @@ const SITUACAO: Record<string, { rotulo: string; tom?: "ok" | "atencao" | "acent
 
 function plural(n: number, um: string, varios: string) {
   return `${n} ${n === 1 ? um : varios}`;
+}
+
+/** Cartão "8 de 26 clientes com reunião" de um squad (ou da operação toda). */
+function CartaoReunioes({ href, titulo, sub, conta }: { href: string; titulo: string; sub: string; conta: ContaDoGrupo }) {
+  const pct = conta.clientes ? Math.round((conta.comReuniao / conta.clientes) * 100) : 0;
+  return (
+    <Link href={href} className="card cartao-reunioes">
+      <div className="card-hd">
+        <Ic>
+          <CalendarDays strokeWidth={1.6} />
+        </Ic>
+        <Seta />
+      </div>
+      <div className="card-t">
+        {titulo}
+        <small>{sub}</small>
+      </div>
+      <div className="card-ft">
+        <span className="num">
+          {conta.comReuniao}
+          <small>de {plural(conta.clientes, "cliente", "clientes")} com reunião</small>
+        </span>
+      </div>
+      <Barra pct={pct} />
+      <p className="cartao-reunioes-pe">{plural(conta.reunioes, "reunião feita", "reuniões feitas")} no mês</p>
+    </Link>
+  );
 }
 
 export default async function GestaoPage() {
@@ -70,6 +113,43 @@ export default async function GestaoPage() {
     .sort((x, y) => (y.resumo.pct ?? -1) - (x.resumo.pct ?? -1));
   const noLimite = carteiras.filter((c) => c.resumo.situacao === "completa" || c.resumo.situacao === "quase-completa");
   const mesAberto = statusMes !== "fechada";
+
+  // reuniões do mês: clientes com pelo menos uma reunião feita, por squad (a coordenação de cada cliente)
+  const agora = new Date();
+  const mesAtual = mesDe(agora);
+  const [leitura, pessoas] = await Promise.all([
+    migracaoPendente ? Promise.resolve(null) : buscarReunioes(agora),
+    migracaoPendente ? Promise.resolve([]) : diretorioPessoas().catch(() => []),
+  ]);
+  let squadsReunioes: { chave: string; rotulo: string; coordenacao: string | null; conta: ContaDoGrupo }[] = [];
+  let contaTotal: ContaDoGrupo | null = null;
+  if (leitura?.ok) {
+    const feitas = feitasNoMes(leitura.reunioes, clientes, mesAtual);
+    const nomeDaPessoa = new Map(pessoas.map((p) => [p.id, p.nome]));
+    const linhas = clientes
+      .filter((c) => c.status !== "saiu")
+      .map((c) => {
+        const ids = feitas.get(c.id) ?? [];
+        return {
+          nome: c.nome,
+          assessorId: c.assessorId,
+          assessor: c.assessorId ? (nomes.get(c.assessorId) ?? null) : null,
+          coordenacaoId: c.coordenacaoId ?? null,
+          coordenacao: c.coordenacaoId ? (nomeDaPessoa.get(c.coordenacaoId) ?? null) : null,
+          squad: c.squad,
+          realizadas: ids.length,
+          realizadasIds: ids,
+        };
+      });
+    squadsReunioes = agruparPorSquad(linhas).map((sq) => ({
+      chave: sq.chave,
+      rotulo: sq.rotulo,
+      coordenacao: sq.coordenacao,
+      conta: contarClientesComReuniao(sq.assessores.flatMap((a) => a.linhas)),
+    }));
+    contaTotal = contarClientesComReuniao(linhas);
+  }
+  const nomeDoMesAtual = nomeDoMes(mesAtual).replace(/ de \d{4}$/, "");
 
   return (
     <>
@@ -257,6 +337,30 @@ export default async function GestaoPage() {
             </Link>
           )}
         </div>
+
+        {contaTotal && squadsReunioes.length > 0 && (
+          <section className="reunioes-secao" aria-labelledby="t-reunioes-mes">
+            <h2 id="t-reunioes-mes">Reuniões em {nomeDoMesAtual}</h2>
+            <p className="secao-lede">
+              Clientes com pelo menos uma reunião feita no mês, por squad. Cliente a cliente, em{" "}
+              <Link href="/reunioes">Reuniões</Link>.
+            </p>
+            <div className="grade-3">
+              {squadsReunioes.map((sq) => (
+                <CartaoReunioes
+                  key={sq.chave}
+                  href={`/reunioes#sq-${sq.chave}`}
+                  titulo={sq.rotulo}
+                  sub={sq.coordenacao ? `Coordenação de ${sq.coordenacao}` : "Clientes sem coordenação"}
+                  conta={sq.conta}
+                />
+              ))}
+              {squadsReunioes.length > 1 && (
+                <CartaoReunioes href="/reunioes" titulo="Toda a operação" sub="todos os squads juntos" conta={contaTotal} />
+              )}
+            </div>
+          </section>
+        )}
       </Cena>
 
       <Faixa id="carteiras" rotulo="Carteiras e próximas fases">
@@ -320,9 +424,9 @@ export default async function GestaoPage() {
               O painel de saúde dentro do Hub, com login: críticos, SLA, sentimento, foco da semana e ranking, filtrado
               pela carteira de cada coordenação.
             </EmBreve>
-            <EmBreve titulo="Reuniões e tarefas" fase="fase 3">
-              Reuniões realizadas e esperadas por assessor e tarefas em atraso no ClickUp, com a sugestão das metas 3.4 e
-              3.5 no Lançar mês.
+            <EmBreve titulo="Tarefas do ClickUp" fase="fase 3">
+              Tarefas em atraso por assessor no ClickUp e a sugestão das metas 3.4 e 3.5 no Lançar mês, com as reuniões que
+              já estão no Hub.
             </EmBreve>
             <EmBreve titulo="Rotinas cumpridas" fase="fase 2">
               Os ritos da semana de cada cliente viram checklist, e a gestão vê o cumprimento por assessor.

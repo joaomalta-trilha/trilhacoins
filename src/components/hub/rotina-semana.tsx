@@ -4,15 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { DIAS_UTEIS, type DiaUtil } from "@/lib/hub/dossie";
+import type { ClienteRotina } from "@/lib/hub/rotina";
 
-export interface ClienteRotina {
-  slug: string;
-  nome: string;
-  iniciais: string;
-  pedeAtencao: boolean;
-  /** itens já resumidos (uma linha cada), por dia útil */
-  dias: Record<DiaUtil, string[]>;
-}
+export type { ClienteRotina };
 
 const CURTO: Record<DiaUtil, string> = {
   Segunda: "Seg",
@@ -24,7 +18,7 @@ const CURTO: Record<DiaUtil, string> = {
 
 /**
  * A rotina da carteira, um dia por vez: abre no dia de hoje e as pílulas
- * deixam espiar o resto da semana sem sair do Início.
+ * deixam espiar o resto da semana sem sair da página.
  */
 export function RotinaDaSemana({ hoje, clientes }: { hoje: DiaUtil | null; clientes: ClienteRotina[] }) {
   const [dia, setDia] = useState<DiaUtil>(hoje ?? "Segunda");

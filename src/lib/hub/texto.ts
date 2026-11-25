@@ -31,3 +31,14 @@ export function primeiroNome(nome: string): string {
 export function capitalizar(texto: string): string {
   return texto ? texto[0].toUpperCase() + texto.slice(1) : texto;
 }
+
+/** Duas letras para o círculo de um cliente ("Clínica Sol" → "CS"). */
+export function iniciais(nome: string): string {
+  const palavras = nome
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((p) => p.length > 2 || /^\p{N}+$/u.test(p));
+  const base = palavras.length ? palavras : nome.split(/\s+/).filter(Boolean);
+  const letras = base.length >= 2 ? base[0][0] + base[1][0] : (base[0] ?? "?").slice(0, 2);
+  return letras.toUpperCase();
+}
