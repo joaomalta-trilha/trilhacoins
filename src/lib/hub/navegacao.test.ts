@@ -28,21 +28,22 @@ describe("itens do menu", () => {
       .map((i) => i.href);
 
   it("assessor vê o próprio dia, a carteira, a Trilha e o Coins", () => {
-    expect(hrefs("assessor", "assessor")).toEqual(["/inicio", "/clientes", "/trilha", "/coins"]);
+    expect(hrefs("assessor", "assessor")).toEqual(["/inicio", "/clientes", "/reunioes", "/trilha", "/coins"]);
   });
 
-  it("gestão tem a planilha de Clientes e as carteiras em Assessoria", () => {
-    expect(hrefs("coordenacao", "gestao")).toEqual(["/gestao", "/clientes", "/assessoria", "/trilha", "/coins"]);
+  it("gestão tem a planilha de Clientes, as Reuniões e as carteiras em Assessoria", () => {
+    expect(hrefs("coordenacao", "gestao")).toEqual(["/gestao", "/clientes", "/reunioes", "/assessoria", "/trilha", "/coins"]);
   });
 
-  it("só a diretoria vê Usuários", () => {
-    expect(hrefs("diretoria", "gestao")).toContain("/gestao/usuarios");
+  it("só a diretoria vê Usuários, e no painel da conta, não na barra", () => {
+    const usuarios = itensDeNavegacao("diretoria", "gestao").find((i) => i.href === "/gestao/usuarios");
+    expect(usuarios?.naConta).toBe(true);
     expect(hrefs("coordenacao", "gestao")).not.toContain("/gestao/usuarios");
   });
 
   it("módulos futuros aparecem como 'em breve' com a fase", () => {
     const futuros = itensDeNavegacao("assessor", "assessor").filter((i) => i.emBreve);
-    expect(futuros.map((i) => i.rotulo)).toEqual(["Tarefas", "Reuniões"]);
+    expect(futuros.map((i) => i.rotulo)).toEqual(["Tarefas"]);
     expect(futuros.every((i) => i.emBreve === "fase 3")).toBe(true);
   });
 

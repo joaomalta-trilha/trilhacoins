@@ -1,12 +1,14 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import * as hub from "@/lib/data/hub";
 import { COOKIE_MODO, COOKIE_VER_COMO, type Modo, paginaInicial } from "@/lib/hub/navegacao";
 import { aplicarRespostas, statusDoCadastro, validarRespostas } from "@/lib/hub/formulario-dossie";
 import { pontosDosCriterios, validarNotasCriterios } from "@/lib/hub/exigencia";
+import { obterSessao } from "@/lib/auth/sessao";
+import { TAG_REUNIOES } from "@/lib/data/clickup";
 
 // Server Actions do Hub. São endpoints públicos: validam a forma do que
 // chega e devolvem { ok } previsível; quem decide se a pessoa PODE é o
@@ -53,6 +55,23 @@ export async function verComoAction(assessorId: string): Promise<Resultado> {
       maxAge: UM_ANO,
     });
     revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}
+
+// ---------------------------------------------------------------
+// reuniões (ClickUp)
+// ---------------------------------------------------------------
+
+/** "Atualizar agora": derruba o cache das reuniões; a próxima tela lê o ClickUp de novo. */
+export async function atualizarReunioesAction(): Promise<Resultado> {
+  try {
+    if (!(await obterSessao())) throw new Error("Sua sessão acabou. Entre no Hub de novo.");
+    // expire 0: a próxima tela espera a leitura nova em vez de mostrar a antiga
+    revalidateTag(TAG_REUNIOES, { expire: 0 });
+    revalidatePath("/reunioes");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);

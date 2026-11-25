@@ -56,7 +56,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   const { sessao, modo, podeTrocarModo } = ctx;
   const itens = itensDeNavegacao(sessao.papel, modo);
-  const foraDaDoca = itens.filter((i) => !i.emBreve).slice(5);
+  // no celular a doca leva cinco seções; o resto, e o que é de administração, fica no painel da conta
+  const foraDaDoca = itens.filter((i) => !i.emBreve && !i.naConta).slice(5);
+  const daConta = itens.filter((i) => !i.emBreve && i.naConta);
   const papel = rotuloPapel(sessao.papel, sessao.cargo);
   const inicial = sessao.nome.trim().slice(0, 1).toUpperCase() || "?";
 
@@ -91,9 +93,17 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
         {foraDaDoca.length > 0 && (
-          // a doca do celular leva cinco seções; as outras ficam aqui
           <div className="conta-secao so-celular">
             {foraDaDoca.map((i) => (
+              <AtalhoDoPainel key={i.href} href={i.href} icone={i.icone}>
+                {i.rotulo}
+              </AtalhoDoPainel>
+            ))}
+          </div>
+        )}
+        {daConta.length > 0 && (
+          <div className="conta-secao">
+            {daConta.map((i) => (
               <AtalhoDoPainel key={i.href} href={i.href} icone={i.icone}>
                 {i.rotulo}
               </AtalhoDoPainel>

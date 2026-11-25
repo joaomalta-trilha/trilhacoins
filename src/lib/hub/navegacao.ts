@@ -25,6 +25,8 @@ export interface ItemNav {
   icone: IconeNav;
   /** módulo ainda não construído: aparece desabilitado, com a fase prevista */
   emBreve?: string;
+  /** mora no painel da conta, não na barra (o que é de administração) */
+  naConta?: boolean;
 }
 
 export const COOKIE_MODO = "hub_modo";
@@ -49,21 +51,22 @@ export function itensDeNavegacao(papel: Papel, modo: Modo): ItemNav[] {
     return [
       { href: "/inicio", rotulo: "Início", icone: "inicio" },
       { href: "/clientes", rotulo: "Minha carteira", icone: "carteira" },
+      { href: "/reunioes", rotulo: "Reuniões", icone: "reunioes" },
       { href: "/trilha", rotulo: "Trilha do Assessor", icone: "trilha" },
       { href: "/coins", rotulo: "Trilha Coins", icone: "coins" },
       { href: "/tarefas", rotulo: "Tarefas", icone: "tarefas", emBreve: "fase 3" },
-      { href: "/reunioes", rotulo: "Reuniões", icone: "reunioes", emBreve: "fase 3" },
     ];
   }
   const itens: ItemNav[] = [
     { href: "/gestao", rotulo: "Visão geral", icone: "gestao" },
     // Clientes: a planilha de controle; Assessoria: as carteiras, assessor por assessor
     { href: "/clientes", rotulo: "Clientes", icone: "clientes" },
+    { href: "/reunioes", rotulo: "Reuniões", icone: "reunioes" },
     { href: "/assessoria", rotulo: "Assessoria", icone: "assessoria" },
     { href: "/trilha", rotulo: "Trilha do Assessor", icone: "trilha" },
     { href: "/coins", rotulo: "Trilha Coins", icone: "coins" },
   ];
-  if (papel === "diretoria") itens.push({ href: "/gestao/usuarios", rotulo: "Usuários", icone: "usuarios" });
+  if (papel === "diretoria") itens.push({ href: "/gestao/usuarios", rotulo: "Usuários", icone: "usuarios", naConta: true });
   itens.push({ href: "/saude", rotulo: "Saúde dos clientes", icone: "saude", emBreve: "fase 4" });
   return itens;
 }

@@ -3819,3 +3819,234 @@ table.tabela-vinculo tbody tr:hover th {
   color: var(--bad-ink);
   font: 400 11.5px/1.2 var(--fonte);
 }
+
+/* ---------- Reuniões ---------- */
+.meses .pill svg {
+  width: 13px;
+  height: 13px;
+}
+.meses span.pill {
+  cursor: default;
+}
+.atualizar-reunioes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+.atualizar-reunioes .btn svg.girando {
+  animation: girar 0.9s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+table.tabela-reunioes {
+  min-width: 1040px;
+}
+table.tabela-reunioes tbody th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+}
+table.tabela-reunioes tbody tr:last-child th {
+  border-bottom: 0;
+}
+table.tabela-reunioes tbody tr:hover th {
+  background: #fafaf8;
+}
+.tabela-reunioes .col-pessoa {
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.no-mes {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.no-mes b {
+  font: 400 18px/1 var(--fonte);
+  font-variant-numeric: tabular-nums;
+}
+.no-mes b small {
+  font-size: 12px;
+  color: var(--muted);
+}
+/* um ponto por reunião do mês: cheio = feita, laranja = vencida,
+   contorno = marcada, tracejado = falta marcar */
+.pontos-mes {
+  display: inline-flex;
+  gap: 4px;
+}
+.pontos-mes i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+}
+.pontos-mes .ponto-feito {
+  background: var(--ink);
+}
+.pontos-mes .ponto-vencido {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.pontos-mes .ponto-falta {
+  border-style: dashed;
+  border-color: var(--placeholder);
+}
+.quando-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s;
+}
+.quando-link:hover {
+  text-decoration-color: var(--accent);
+}
+.quando-link small {
+  color: var(--muted);
+}
+.quando-link svg {
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+}
+.reunioes-secao {
+  margin-top: 48px;
+}
+.reunioes-secao h2 {
+  font: 400 26px/1.1 var(--fonte);
+  letter-spacing: -0.01em;
+}
+.secao-lede {
+  max-width: 68ch;
+  margin: 8px 0 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.secao-lede a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: rgba(20, 20, 20, 0.3);
+  text-underline-offset: 3px;
+}
+.lista-vencidas {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.lista-vencidas li {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px 12px 20px;
+  border-radius: var(--r-md);
+  background: var(--card);
+}
+.vencida-quando {
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.vencida-quando small {
+  color: var(--muted);
+}
+.vencida-quem {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.vencida-quem b {
+  font: 500 13.5px/1.3 var(--fonte);
+}
+.vencida-quem small {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.lista-vencidas .btn {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .atualizar-reunioes {
+    margin-left: 0;
+  }
+  .lista-vencidas li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+/* reuniões na página do cliente */
+.reunioes-cliente-resumo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 10px 0 16px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.reunioes-cliente-resumo b {
+  font: 400 22px/1 var(--fonte);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.reunioes-cliente {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.reunioes-cliente li {
+  display: grid;
+  grid-template-columns: 140px 110px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px 11px 18px;
+  border-radius: var(--r-md);
+  background: var(--card);
+  font-size: 13px;
+}
+.reunioes-cliente .chip {
+  justify-self: start;
+}
+.reuniao-quando {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.reuniao-quando small {
+  color: var(--muted);
+}
+.reuniao-quem {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (max-width: 640px) {
+  .reunioes-cliente li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .reuniao-quem {
+    display: none;
+  }
+}

@@ -50,8 +50,9 @@ export function IconeDoItem({ icone, tamanho = 18 }: { icone: IconeNav; tamanho?
  */
 export function NavPrincipal({ itens }: { itens: ItemNav[] }) {
   const pathname = usePathname();
-  const prontos = itens.filter((i) => !i.emBreve);
-  const ativo = itemAtivo(pathname, prontos);
+  // o painel da conta também conta para "qual está ativo": em Usuários, nenhuma pílula acende
+  const ativo = itemAtivo(pathname, itens);
+  const prontos = itens.filter((i) => !i.emBreve && !i.naConta);
   return (
     <nav className="pills nav-principal" aria-label="Menu principal">
       {prontos.map((item) => (
@@ -71,8 +72,8 @@ export function NavPrincipal({ itens }: { itens: ItemNav[] }) {
 /** Doca flutuante no rodapé (celular). */
 export function Doca({ itens }: { itens: ItemNav[] }) {
   const pathname = usePathname();
-  const prontos = itens.filter((i) => !i.emBreve).slice(0, 5);
-  const ativo = itemAtivo(pathname, prontos);
+  const ativo = itemAtivo(pathname, itens);
+  const prontos = itens.filter((i) => !i.emBreve && !i.naConta).slice(0, 5);
   return (
     <nav className="doca" aria-label="Menu principal">
       {prontos.map((item) => (

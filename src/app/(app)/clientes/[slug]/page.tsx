@@ -3,7 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { ClipboardList, Pencil, Video } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { MigracaoPendenteError, diretorioAssessores, obterClientePorSlug } from "@/lib/data/hub";
-import { lerDossie, campo } from "@/lib/hub/dossie";
+import { lerDossie, lerFrequencias, campo } from "@/lib/hub/dossie";
+import { buscarReunioes } from "@/lib/data/clickup";
+import { esperadasNoMes, mesDe } from "@/lib/hub/reunioes";
+import { ReunioesDoCliente, ReunioesSemVinculo } from "@/components/hub/reunioes-cliente";
 import { AvisoMigracao, Cena, Chip, EmBreve, Estrelas, Faixa, PaginaTopo, Voltar } from "@/components/hub/basicos";
 import { Ancoras } from "@/components/hub/ancoras";
 import { DossieAnalise, DossieEssencial, DossieRotina, partesDoDossie } from "@/components/hub/dossie-view";
@@ -51,13 +54,26 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
   const audiovisual = /audiovisual/i.test(cliente.pacote ?? "");
   const mostrarEmBreve = ehDaCarteira || ctx.modo === "gestao";
 
+  // reuniões do ClickUp (cache de 10 minutos, o mesmo da tela Reuniões)
+  const agora = new Date();
+  const leitura = await buscarReunioes(agora);
+  const reunioesBloco = !leitura.ok ? null : cliente.clickupClienteOpcao ? (
+    <ReunioesDoCliente
+      reunioes={leitura.reunioes.filter((r) => r.opcaoCliente === cliente.clickupClienteOpcao)}
+      esperadas={esperadasNoMes(d ? lerFrequencias(d).reuniao : null)}
+      mes={mesDe(agora)}
+      agora={agora}
+    />
+  ) : ctx.modo === "gestao" ? (
+    <ReunioesSemVinculo />
+  ) : null;
+
   const emBreve = mostrarEmBreve ? (
     <section className="dossie-secao" aria-labelledby="t-breve">
       <h2 id="t-breve">Chega nas próximas fases</h2>
       <div className="grade-2">
-        <EmBreve titulo="Tarefas e reuniões" fase="fase 3">
-          Tarefas abertas e atrasadas no ClickUp e as reuniões realizadas e agendadas deste cliente, direto da lista de
-          reuniões.
+        <EmBreve titulo="Tarefas do ClickUp" fase="fase 3">
+          Tarefas abertas e atrasadas deste cliente no ClickUp, com o atalho para cada uma.
         </EmBreve>
         <EmBreve titulo="Grupo de WhatsApp" fase="fase 4">
           Mensagens esperando resposta, insatisfações abertas e o termômetro do grupo, vindos do painel de saúde.
@@ -153,6 +169,7 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
             <DossieRotina d={d} cliente={cliente} />
           </Faixa>
           <Cena>
+            {reunioesBloco}
             <DossieAnalise d={d} />
             {emBreve}
             <p className="nota-rodape" style={{ marginTop: 40 }}>
@@ -177,6 +194,7 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
               </Link>
             )}
           </div>
+          {reunioesBloco}
           {emBreve}
         </Cena>
       )}
