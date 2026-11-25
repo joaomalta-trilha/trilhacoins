@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Pencil, Video } from "lucide-react";
+import { ClipboardList, Pencil, Video } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import { MigracaoPendenteError, diretorioAssessores, obterClientePorSlug } from "@/lib/data/hub";
 import { lerDossie, campo } from "@/lib/hub/dossie";
@@ -72,10 +72,16 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
         <div className="acoes-topo">
           <Voltar href="/clientes">{ctx.modo === "gestao" ? "Clientes" : "Minha carteira"}</Voltar>
           {podeEditar && (
-            <Link href={`/clientes/${cliente.slug}/editar`} className="btn btn-secundario">
-              <Pencil strokeWidth={1.6} aria-hidden="true" />
-              Editar
-            </Link>
+            <div className="acoes-botoes">
+              <Link href={`/clientes/${cliente.slug}/dossie`} className="btn btn-primario">
+                <ClipboardList strokeWidth={1.6} aria-hidden="true" />
+                Preencher dossiê
+              </Link>
+              <Link href={`/clientes/${cliente.slug}/editar`} className="btn btn-secundario">
+                <Pencil strokeWidth={1.6} aria-hidden="true" />
+                Editar
+              </Link>
+            </div>
           )}
         </div>
 
@@ -160,9 +166,16 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
           <div className="vazio" style={{ marginTop: 40 }}>
             <b>Dossiê ainda não respondido</b>
             <p>
-              O dossiê sai quando a coordenação responder o formulário desse cliente.
-              {podeEditar && " Você pode escrever direto em Editar, na parte Dossiê."}
+              {podeEditar
+                ? "Responda o formulário do dossiê: são as perguntas de sempre da coordenação, aqui dentro do Hub."
+                : "O dossiê aparece aqui quando a coordenação responder o formulário desse cliente."}
             </p>
+            {podeEditar && (
+              <Link href={`/clientes/${cliente.slug}/dossie`} className="btn btn-primario" style={{ marginTop: 8 }}>
+                <ClipboardList strokeWidth={1.6} aria-hidden="true" />
+                Preencher o dossiê
+              </Link>
+            )}
           </div>
           {emBreve}
         </Cena>

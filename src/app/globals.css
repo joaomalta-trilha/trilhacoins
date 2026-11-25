@@ -3106,3 +3106,134 @@ input[type="checkbox"].interruptor:disabled {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ---------- clientes: criar, preencher o dossiê, inativar e excluir ---------- */
+.acoes-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.formulario-dossie {
+  display: grid;
+  gap: 16px;
+  max-width: 900px;
+}
+.bloco-form {
+  gap: 22px;
+  padding: 24px 26px 26px;
+}
+.bloco-form h2 {
+  font: 400 22px/1.15 var(--fonte);
+  letter-spacing: -0.01em;
+}
+.pergunta {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.pergunta-titulo {
+  font: 500 14px/1.35 var(--fonte);
+  color: var(--ink);
+}
+fieldset.pergunta > legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 10px;
+}
+fieldset.pergunta > legend + * {
+  clear: both;
+}
+.pergunta .input {
+  width: 100%;
+}
+.pergunta textarea.input {
+  min-height: 84px;
+  resize: vertical;
+}
+.pergunta .escolha-chips {
+  max-width: none;
+}
+.pergunta .chip-escolha {
+  height: 32px;
+  padding: 0 13px;
+  font-size: 12.5px;
+}
+.pergunta-hoje {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--wait-ink);
+  background: var(--wait-bg);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+.pergunta-hoje q {
+  quotes: "“" "”";
+}
+.lado-a-lado {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 18px;
+}
+.barra-salvar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 16px 36px -18px rgba(0, 0, 0, 0.45);
+  width: max-content;
+  max-width: 100%;
+}
+.acoes-cliente {
+  gap: 0;
+  padding: 6px 22px;
+}
+.acao-cliente {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  padding: 18px 0;
+}
+.acao-cliente + .acao-cliente {
+  border-top: 1px solid var(--line-soft);
+}
+.acao-cliente b {
+  font: 500 14px/1.3 var(--fonte);
+}
+.acao-cliente p {
+  max-width: 62ch;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.acoes-cliente > [role="status"] {
+  padding-bottom: 16px;
+}
+.btn.botao-perigo {
+  color: var(--bad-ink);
+}
+.btn.botao-perigo:hover:not(:disabled) {
+  border-color: var(--bad-ink);
+  background: var(--bad-bg);
+}
+@media (max-width: 899px) {
+  .barra-salvar {
+    bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 640px) {
+  .lado-a-lado {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .bloco-form {
+    padding: 20px 18px;
+  }
+}

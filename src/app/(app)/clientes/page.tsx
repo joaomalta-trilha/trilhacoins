@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Plus } from "lucide-react";
 import { obterContexto } from "@/lib/hub/contexto";
 import {
   type ClienteRow,
@@ -196,7 +197,14 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
       <PaginaTopo
         titulo="Clientes"
         lede={`${ativos} clientes ativos e ${pendentes} sem dossiê. Cada carteira mostra a soma da nota de exigência contra o teto do nível do assessor.`}
-      />
+      >
+        <div className="sub-row">
+          <Link href="/clientes/novo" className="btn btn-primario">
+            <Plus strokeWidth={1.8} aria-hidden="true" />
+            Novo cliente
+          </Link>
+        </div>
+      </PaginaTopo>
       <ListaClientes grupos={grupos} mostrarGestao filtroInicial={filtroInicial} />
     </Cena>
   );

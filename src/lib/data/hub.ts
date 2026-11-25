@@ -4,6 +4,7 @@ import { cache } from "react";
 import { obterUsuarioAutenticado } from "@/lib/auth/sessao";
 import type { Papel } from "@/lib/auth/sessao";
 import { createClient } from "@/lib/supabase/server";
+import { slugificar } from "@/lib/hub/texto";
 
 // Camada de dados do Hub (clientes, dossiês, liberações, conteúdos e
 // diretório de pessoas). Mesma regra do repo do Coins: quem decide o
@@ -237,6 +238,78 @@ export async function salvarDossie(clienteId: string, conteudoMd: string): Promi
     entidadeId: clienteId,
     valorNovo: { versao: data[0].versao },
   });
+}
+
+// ---------------------------------------------------------------
+// criar e excluir clientes (quem pode: RLS da migration 0007 —
+// gestão cria na própria carteira; só a diretoria exclui)
+// ---------------------------------------------------------------
+
+export interface NovoCliente {
+  nome: string;
+  assessorId: string | null;
+  status: StatusCliente;
+  squad: string | null;
+  pacote: string | null;
+  nicho: string | null;
+  frase: string | null;
+  exigenciaPts: number | null;
+}
+
+/** "novo" é a página de cadastro: nenhum cliente pode ter esse endereço. */
+const SLUGS_RESERVADOS = new Set(["novo"]);
+
+export async function criarCliente(novo: NovoCliente): Promise<{ id: string; slug: string }> {
+  const supabase = await createClient();
+  const base = slugificar(novo.nome) || "cliente";
+  for (let n = 1; n <= 20; n++) {
+    const slug = n === 1 && !SLUGS_RESERVADOS.has(base) ? base : `${base}-${n}`;
+    // O id nasce aqui e o insert não pede a linha de volta: a regra de
+    // leitura (pode_ver_cliente) consulta a própria tabela e não enxerga,
+    // na mesma instrução, a linha recém-criada.
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from("clientes").insert({
+      id,
+      slug,
+      nome: novo.nome,
+      status: novo.status,
+      assessor_id: novo.assessorId,
+      squad: novo.squad,
+      pacote: novo.pacote,
+      nicho: novo.nicho,
+      frase: novo.frase,
+      exigencia_pts: novo.exigenciaPts,
+    });
+    // endereço já usado (às vezes por um cliente que esta pessoa não enxerga): tenta o próximo
+    if (error?.code === "23505") continue;
+    if (error?.code === "42501") throw new Error("Sem permissão para criar cliente nessa carteira.");
+    lancarSeErro(error);
+    const criado = { id, slug };
+    await registrarLog(supabase, {
+      acao: "criar_cliente",
+      entidade: "cliente",
+      entidadeId: criado.id,
+      valorNovo: { nome: novo.nome, slug: criado.slug, status: novo.status },
+    });
+    return criado;
+  }
+  throw new Error("Não deu para gerar um endereço para esse cliente. Tente um nome um pouco diferente.");
+}
+
+export async function excluirCliente(id: string): Promise<{ nome: string }> {
+  const supabase = await createClient();
+  // o dossiê, as versões, as liberações e o histórico saem junto (on delete cascade)
+  const { data, error } = await supabase.from("clientes").delete().eq("id", id).select("id, nome, slug");
+  lancarSeErro(error);
+  if (!data?.length) throw new Error("Só a diretoria exclui clientes.");
+  const excluido = data[0] as { id: string; nome: string; slug: string };
+  await registrarLog(supabase, {
+    acao: "excluir_cliente",
+    entidade: "cliente",
+    entidadeId: id,
+    valorAnterior: { nome: excluido.nome, slug: excluido.slug },
+  });
+  return { nome: excluido.nome };
 }
 
 // ---------------------------------------------------------------

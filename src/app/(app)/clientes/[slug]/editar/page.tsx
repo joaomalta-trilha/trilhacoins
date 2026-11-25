@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigirGestao } from "@/lib/auth/sessao";
 import { MigracaoPendenteError, diretorioAssessores, listarLiberacoes, obterClientePorSlug } from "@/lib/data/hub";
 import { AvisoMigracao, Cena, PaginaTopo, Voltar } from "@/components/hub/basicos";
 import { CadastroCliente, EditorDossie, LiberacoesDossie } from "@/components/hub/cliente-editor";
+import { AcoesDoCliente } from "@/components/hub/acoes-cliente";
 
 export default async function EditarClientePage({ params }: { params: Promise<{ slug: string }> }) {
   const sessao = await exigirGestao();
@@ -55,9 +57,27 @@ export default async function EditarClientePage({ params }: { params: Promise<{ 
 
       <section className="editor-secao">
         <h2>Dossiê</h2>
+        <p className="muted" style={{ fontSize: 13, margin: "-6px 0 14px" }}>
+          Para responder pelas perguntas de sempre, use{" "}
+          <Link href={`/clientes/${cliente.slug}/dossie`} className="btn-link">
+            Preencher dossiê
+          </Link>
+          . Aqui é o texto inteiro, para ajustes finos.
+        </p>
         <EditorDossie
           cliente={cliente}
           conteudoInicial={dossie?.conteudoMd ?? `# ${cliente.nome}\n\n- Em uma frase: \n- Objetivo: \n- Meta: \n`}
+        />
+      </section>
+
+      <section className="editor-secao">
+        <h2>Inativar ou excluir</h2>
+        <AcoesDoCliente
+          clienteId={cliente.id}
+          slug={cliente.slug}
+          nome={cliente.nome}
+          status={cliente.status}
+          podeExcluir={sessao.papel === "diretoria"}
         />
       </section>
     </Cena>

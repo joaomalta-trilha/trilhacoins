@@ -144,6 +144,7 @@ export function DossieEssencial({ d, md }: { d: Dossie; md: string }) {
                 ["Contas", campo(d, "Contas")],
                 ["Conta Meta", campo(d, "Conta Meta")],
                 ["CRM", campo(d, "CRM")],
+                ["Acesso do assistente ao CRM", campo(d, "Acesso do assistente ao CRM")],
                 ["Eventos no Meta", campo(d, "Funil")],
                 ...notas.map((n): [string, string] => {
                   const k = n.split(":")[0];

@@ -100,7 +100,7 @@ export function CadastroCliente({
         <select className="input" value={f.status} onChange={(e) => set("status", e.target.value as StatusCliente)}>
           <option value="ativo">Ativo</option>
           <option value="pausado">Pausado</option>
-          <option value="saiu">Saiu</option>
+          <option value="saiu">Saiu (inativo)</option>
         </select>
       </label>
       <label>

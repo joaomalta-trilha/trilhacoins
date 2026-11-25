@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import * as hub from "@/lib/data/hub";
 import { COOKIE_MODO, COOKIE_VER_COMO, type Modo, paginaInicial } from "@/lib/hub/navegacao";
+import { aplicarRespostas, statusDoCadastro, validarRespostas } from "@/lib/hub/formulario-dossie";
 
 // Server Actions do Hub. São endpoints públicos: validam a forma do que
 // chega e devolvem { ok } previsível; quem decide se a pessoa PODE é o
@@ -130,6 +131,87 @@ export async function definirLiberacoesAction(
     await hub.definirLiberacoes(uuid(clienteId), [...new Set(assessorIds.map(uuid))], Boolean(abertoATodos));
     revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
     revalidatePath("/clientes");
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}
+
+// ---------------------------------------------------------------
+// criar, excluir e preencher o dossiê de clientes
+// ---------------------------------------------------------------
+
+export async function criarClienteAction(entrada: {
+  nome?: string;
+  assessorId?: string | null;
+  status?: string;
+  squad?: string | null;
+  pacote?: string | null;
+  nicho?: string | null;
+  frase?: string | null;
+  exigenciaPts?: number | null;
+}): Promise<{ ok: true; slug: string } | { ok: false; erro: string }> {
+  try {
+    const nome = textoOuNulo(entrada.nome, 120);
+    if (!nome) throw new Error("O cliente precisa de um nome.");
+    const status = entrada.status ?? "ativo";
+    if (!STATUS.includes(status as hub.StatusCliente)) throw new Error("Status inválido.");
+    const p = entrada.exigenciaPts ?? null;
+    if (p !== null && !(Number.isInteger(p) && p >= 7 && p <= 25)) throw new Error("A nota de exigência vai de 7 a 25 pontos.");
+    const criado = await hub.criarCliente({
+      nome,
+      assessorId: entrada.assessorId ? uuid(entrada.assessorId) : null,
+      status: status as hub.StatusCliente,
+      squad: textoOuNulo(entrada.squad, 80),
+      pacote: textoOuNulo(entrada.pacote, 80),
+      nicho: textoOuNulo(entrada.nicho, 80),
+      frase: textoOuNulo(entrada.frase, 600),
+      exigenciaPts: p,
+    });
+    revalidatePath("/clientes");
+    revalidatePath("/gestao");
+    return { ok: true, slug: criado.slug };
+  } catch (e) {
+    return paraResultado(e) as { ok: false; erro: string };
+  }
+}
+
+export async function excluirClienteAction(clienteId: string): Promise<Resultado> {
+  try {
+    await hub.excluirCliente(uuid(clienteId));
+    revalidatePath("/clientes");
+    revalidatePath("/gestao");
+    revalidatePath("/inicio");
+    return { ok: true };
+  } catch (e) {
+    return paraResultado(e);
+  }
+}
+
+/** Respostas do formulário nativo → linhas do dossiê (o resto do dossiê fica como está). */
+export async function salvarFormularioDossieAction(clienteId: string, slug: string, respostas: unknown): Promise<Resultado> {
+  try {
+    const r = validarRespostas(respostas);
+    const dados = await hub.obterClientePorSlug(slug);
+    if (!dados || dados.cliente.id !== uuid(clienteId)) throw new Error("Cliente não encontrado.");
+    const { cliente, dossie } = dados;
+    const assessor = cliente.assessorId
+      ? ((await hub.diretorioAssessores()).find((a) => a.id === cliente.assessorId)?.nome ?? null)
+      : null;
+    const md = aplicarRespostas(dossie?.conteudoMd ?? null, r, {
+      nome: cliente.nome,
+      squad: cliente.squad,
+      assessor,
+      frase: cliente.frase,
+    });
+    if (md.length > 200_000) throw new Error("O dossiê passou de 200 mil caracteres.");
+    if (md !== dossie?.conteudoMd) await hub.salvarDossie(cliente.id, md);
+    const status = statusDoCadastro(r.status);
+    if (status !== cliente.status) await hub.atualizarCliente(cliente.id, { status });
+    revalidatePath(`/clientes/${encodeURIComponent(slug)}`);
+    revalidatePath("/clientes");
+    revalidatePath("/inicio");
+    revalidatePath("/gestao");
     return { ok: true };
   } catch (e) {
     return paraResultado(e);
