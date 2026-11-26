@@ -43,6 +43,10 @@ const SITUACAO: Record<string, string> = {
 
 const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
 
+/**
+ * Os clientes marcados com "pede atenção", apresentados ao assessor como a
+ * prioridade da semana: o texto fala do foco, não de quem marcou.
+ */
 function CartaoAtencao({ clientes }: { clientes: ClienteRow[] }) {
   if (clientes.length === 0) {
     return (
@@ -50,8 +54,8 @@ function CartaoAtencao({ clientes }: { clientes: ClienteRow[] }) {
         <Ic>
           <Check strokeWidth={1.6} />
         </Ic>
-        <b style={{ marginTop: 10 }}>Ninguém pede atenção agora</b>
-        <p>Quando a coordenação marcar um cliente da carteira, ele aparece aqui antes de tudo.</p>
+        <b style={{ marginTop: 10 }}>Nenhum cliente prioritário agora</b>
+        <p>Quando um cliente da carteira precisar de atenção redobrada, ele aparece aqui antes de tudo.</p>
       </div>
     );
   }
@@ -66,8 +70,12 @@ function CartaoAtencao({ clientes }: { clientes: ClienteRow[] }) {
         <span className="num">{clientes.length}</span>
       </div>
       <div className="card-t">
-        {clientes.length === 1 ? "Pede atenção" : "Pedem atenção"}
-        <small>Marcados pela coordenação. Comece por eles.</small>
+        Prioridade da semana
+        <small>
+          {clientes.length === 1
+            ? "Este cliente precisa de atenção redobrada. Comece por ele."
+            : "Estes clientes precisam de atenção redobrada. Comece por eles."}
+        </small>
       </div>
       <div className={`lista-chips${visiveis.length > 3 ? " duas" : ""}`}>
         {visiveis.map((c) => (

@@ -346,7 +346,7 @@ A 36px circle with a 1px Hairline stroke holding a 15px outline icon (lucide, st
 - **Background:** Card White on paper; no border.
 - **Shadow Strategy:** none at rest; link cards rise 4px with the hover lift.
 - **Internal Padding:** 20px 22px 22px (18px on phones). Head row (icon circle + arrow), title, then a footer pushed to the bottom with the number.
-- **Attention card:** the "pedem atenção" card is the one warm-dark card: a slate-to-rust radial gradient on #3a302c with white text and translucent black row chips; its gradient slides slowly on hover (desktop only).
+- **Attention card:** the "Prioridade da semana" card on the assessor's Início (the clients flagged "pede atenção"; its copy speaks of focus, never of who flagged them) is the one warm-dark card: a slate-to-rust radial gradient on #3a302c with white text and translucent black row chips; its gradient slides slowly on hover (desktop only).
 - **Calm state:** when nothing needs attention the same slot becomes a plain white card with a short reassuring line.
 
 ### Dark Band
