@@ -3498,6 +3498,39 @@ th[aria-sort="descending"] .ordenar {
 .nota-pts {
   color: var(--ink-2);
 }
+
+/* "Pede atenção": o interruptor na linha da planilha; na página do cliente,
+   dentro de uma pílula com o nome, ao lado dos botões do topo */
+.tabela-clientes .col-atencao {
+  padding-left: 6px;
+  padding-right: 6px;
+  white-space: nowrap;
+}
+.atencao-pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--ctl);
+  padding: 0 18px 0 9px;
+  border: 1px solid rgba(20, 20, 20, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink);
+  font: 500 13px/1 var(--fonte);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.2s var(--ease),
+    border-color 0.2s var(--ease);
+}
+.atencao-pilula:hover {
+  background: #fff;
+  border-color: var(--ink);
+}
+.atencao-erro {
+  flex-basis: 100%;
+  margin-top: 0;
+}
 .nota-detalhe {
   display: block;
   margin: 5px 0 0 14px;

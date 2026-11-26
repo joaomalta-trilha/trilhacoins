@@ -28,8 +28,11 @@ export interface LinhaCliente {
 export const STATUS_TABELA = ["ativos", "pausados", "inativos", "todos"] as const;
 export type StatusTabela = (typeof STATUS_TABELA)[number];
 
-/** Pendências que se somam à situação ("ativos com dossiê incompleto"). */
-export const PENDENCIAS = ["incompletos", "sem-nota"] as const;
+/**
+ * Recortes que se somam à situação ("ativos com dossiê incompleto"). "atencao"
+ * é o aviso que a gestão marca e desmarca na própria linha.
+ */
+export const PENDENCIAS = ["atencao", "incompletos", "sem-nota"] as const;
 export type Pendencia = (typeof PENDENCIAS)[number];
 
 export function statusDaTabela(valor: string | undefined): StatusTabela {
@@ -47,7 +50,8 @@ export function passaNoStatus(s: StatusTabela, l: Pick<LinhaCliente, "status">):
   return true;
 }
 
-export function temPendencia(p: Pendencia, l: Pick<LinhaCliente, "dossie" | "pts">): boolean {
+export function temPendencia(p: Pendencia, l: Pick<LinhaCliente, "dossie" | "pts" | "pedeAtencao">): boolean {
+  if (p === "atencao") return l.pedeAtencao;
   return p === "incompletos" ? l.dossie.faltam.length > 0 : l.pts === null;
 }
 

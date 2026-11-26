@@ -28,11 +28,19 @@ describe("planilha de clientes", () => {
   });
 
   it("as pendências olham o dossiê e a nota de carteira", () => {
-    const linha = { dossie: dossie(16, ["Acesso ao CRM"]), pts: null };
+    const linha = { dossie: dossie(16, ["Acesso ao CRM"]), pts: null, pedeAtencao: false };
     expect(temPendencia("incompletos", linha)).toBe(true);
     expect(temPendencia("sem-nota", linha)).toBe(true);
     expect(temPendencia("incompletos", { ...linha, dossie: dossie(17, []) })).toBe(false);
     expect(temPendencia("sem-nota", { ...linha, pts: 12 })).toBe(false);
+  });
+
+  it("o recorte Pede atenção mostra só quem a gestão marcou", () => {
+    const linha = { dossie: dossie(17, []), pts: 12, pedeAtencao: false };
+    expect(temPendencia("atencao", linha)).toBe(false);
+    expect(temPendencia("atencao", { ...linha, pedeAtencao: true })).toBe(true);
+    expect(pendenciaDaTabela("atencao")).toBe("atencao");
+    expect(enderecoDaTabela("/clientes", "ativos", "atencao")).toBe("/clientes?pendencia=atencao");
   });
 
   it("o endereço guarda o filtro, sem repetir o padrão", () => {

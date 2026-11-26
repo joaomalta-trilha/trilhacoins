@@ -7,6 +7,7 @@ import { lerDossie, lerFrequencias, campo } from "@/lib/hub/dossie";
 import { buscarReunioes } from "@/lib/data/clickup";
 import { esperadasNoMes, mesDe } from "@/lib/hub/reunioes";
 import { ReunioesDoCliente, ReunioesSemVinculo } from "@/components/hub/reunioes-cliente";
+import { MarcarAtencao } from "@/components/hub/marcar-atencao";
 import { AvisoMigracao, Cena, Chip, EmBreve, Estrelas, Faixa, PaginaTopo, Voltar } from "@/components/hub/basicos";
 import { Ancoras } from "@/components/hub/ancoras";
 import { DossieAnalise, DossieEssencial, DossieRotina, partesDoDossie } from "@/components/hub/dossie-view";
@@ -98,6 +99,7 @@ export default async function ClientePage({ params }: { params: Promise<{ slug: 
                 <Pencil strokeWidth={1.6} aria-hidden="true" />
                 Editar
               </Link>
+              <MarcarAtencao id={cliente.id} slug={cliente.slug} nome={cliente.nome} pedeAtencao={cliente.pedeAtencao} />
             </div>
           )}
         </div>

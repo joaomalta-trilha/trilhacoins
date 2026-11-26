@@ -32,6 +32,7 @@ const ROTULO_SITUACAO: Record<StatusTabela, string> = {
 };
 
 const ROTULO_PENDENCIA: Record<Pendencia, string> = {
+  atencao: "Pede atenção",
   incompletos: "Dossiê incompleto",
   "sem-nota": "Sem nota de carteira",
 };
@@ -42,15 +43,16 @@ export interface Opcao {
 }
 
 /** O que muda na linha antes de o servidor confirmar. */
-type Mudanca = Partial<Pick<LinhaCliente, "status" | "assessorId" | "coordenacaoId">>;
+type Mudanca = Partial<Pick<LinhaCliente, "status" | "assessorId" | "coordenacaoId" | "pedeAtencao">>;
 
 const ROTULO_STATUS: Record<Status, string> = { ativo: "Ativo", pausado: "Pausado", saiu: "Inativo" };
 const ORDEM_STATUS: Record<Status, number> = { ativo: 0, pausado: 1, saiu: 2 };
 
-type Coluna = "cliente" | "coordenacao" | "assessor" | "dossie" | "status" | "carteira";
+type Coluna = "cliente" | "atencao" | "coordenacao" | "assessor" | "dossie" | "status" | "carteira";
 
 const COLUNAS: { chave: Coluna; rotulo: string }[] = [
   { chave: "cliente", rotulo: "Cliente" },
+  { chave: "atencao", rotulo: "Atenção" },
   { chave: "coordenacao", rotulo: "Coordenação" },
   { chave: "assessor", rotulo: "Assessor responsável" },
   { chave: "dossie", rotulo: "Dossiê" },
@@ -68,6 +70,9 @@ function vazia(coluna: Coluna, l: LinhaCliente): boolean {
 
 function comparar(coluna: Coluna, a: LinhaCliente, b: LinhaCliente): number {
   switch (coluna) {
+    case "atencao":
+      // a primeira ordem já traz quem pede atenção no topo
+      return Number(b.pedeAtencao) - Number(a.pedeAtencao);
     case "coordenacao":
       return (a.coordenacao[0] ?? "").localeCompare(b.coordenacao[0] ?? "", "pt-BR");
     case "assessor":
@@ -84,10 +89,11 @@ function comparar(coluna: Coluna, a: LinhaCliente, b: LinhaCliente): number {
 }
 
 /**
- * Clientes (gestão): a planilha de controle. Uma linha por cliente, com
- * coordenação, assessor e status editáveis na própria linha, o dossiê
- * (completo ou não, e o atalho para o formulário) e a nota de carteira,
- * que abre o pop-up dos sete critérios. Abre mostrando os ativos.
+ * Clientes (gestão): a planilha de controle. Uma linha por cliente, com o
+ * aviso "pede atenção" (um interruptor), coordenação, assessor e status
+ * editáveis na própria linha, o dossiê (completo ou não, e o atalho para o
+ * formulário) e a nota de carteira, que abre o pop-up dos sete critérios.
+ * Abre mostrando os ativos.
  */
 export function CentralClientes({
   linhas,
@@ -119,6 +125,9 @@ export function CentralClientes({
   const [aviso, setAviso] = useState<string | null>(null);
   const [, iniciar] = useTransition();
   const [avaliando, setAvaliando] = useState<ClienteAvaliado | null>(null);
+  // desmarcado com o recorte "Pede atenção" ligado: a linha fica até trocar o
+  // filtro, para dar para voltar atrás no mesmo lugar
+  const [mantidos, setMantidos] = useState<ReadonlySet<string>>(() => new Set());
   const campo = useRef<HTMLInputElement>(null);
   const termo = normalizarNome(busca);
 
@@ -176,7 +185,7 @@ export function CentralClientes({
     const lista = comLocal.filter(
       (l) =>
         passaNoStatus(situacao, l) &&
-        (!pendencia || temPendencia(pendencia, l)) &&
+        (!pendencia || temPendencia(pendencia, l) || mantidos.has(l.id)) &&
         (!termo ||
           normalizarNome(l.nome).includes(termo) ||
           normalizarNome(l.assessor ?? "").includes(termo) ||
@@ -189,12 +198,13 @@ export function CentralClientes({
       const porNome = a.nome.localeCompare(b.nome, "pt-BR");
       return ordem.coluna === "cliente" ? porNome * dir : comparar(ordem.coluna, a, b) * dir || porNome;
     });
-  }, [comLocal, situacao, pendencia, termo, ordem]);
+  }, [comLocal, situacao, pendencia, termo, ordem, mantidos]);
 
   // guarda o filtro no endereço, sem recarregar a página
   function filtrar(s: StatusTabela, p: Pendencia | null) {
     setSituacao(s);
     setPendencia(p);
+    setMantidos(new Set());
     window.history.replaceState(null, "", enderecoDaTabela(pathname, s, p));
   }
 
@@ -219,6 +229,11 @@ export function CentralClientes({
       }
       router.refresh();
     });
+  }
+
+  function marcarAtencao(l: LinhaCliente, ligado: boolean) {
+    if (pendencia === "atencao") setMantidos((m) => new Set(m).add(l.id));
+    mudar(l, { pedeAtencao: ligado }, "o aviso de atenção");
   }
 
   /** Opções de um seletor da linha: a atual entra mesmo se a pessoa não puder escolhê-la. */
@@ -314,13 +329,21 @@ export function CentralClientes({
                         </span>
                         <span className="cliente-nome">
                           <b>{l.nome}</b>
-                          <small>
-                            {l.pedeAtencao ? "Pede atenção" : (l.pacote ?? "Pacote a definir")}
-                            {l.pedeAtencao && l.pacote ? ` · ${l.pacote}` : ""}
-                          </small>
+                          <small>{l.pacote ?? "Pacote a definir"}</small>
                         </span>
                       </Link>
                     </th>
+                    <td className="col-atencao">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        className="interruptor"
+                        checked={l.pedeAtencao}
+                        aria-label={`${l.nome} pede atenção`}
+                        title={l.pedeAtencao ? "Desmarcar: deixa de pedir atenção" : "Marcar que pede atenção"}
+                        onChange={(e) => marcarAtencao(l, e.target.checked)}
+                      />
+                    </td>
                     <td className="col-coordenacao">
                       {coordenacaoPorCliente ? (
                         <select

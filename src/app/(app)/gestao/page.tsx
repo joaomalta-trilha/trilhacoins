@@ -206,7 +206,7 @@ export default async function GestaoPage() {
         )}
 
         <div className="grade6">
-          <Link href="/assessoria?filtro=atencao" className="card">
+          <Link href="/clientes?pendencia=atencao" className="card">
             <div className="card-hd">
               <Ic ponto={atencao.length > 0}>
                 <Flag strokeWidth={1.6} />
